@@ -1,4 +1,4 @@
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   const { path } = req.query;
   const pathStr = Array.isArray(path) ? path.join('/') : (path || '');
   const cdnUrl = `https://785b74a4-e22d-4d31-90ef-92b80679f7e6.gdn.poki.com/34a362fa-4b92-4956-b93f-e02ef0fb6a91/StreamingAssets/${pathStr}`;
