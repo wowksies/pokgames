@@ -1,0 +1,168 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tank Stars</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; background: #0d0d1a; }
+        #unity-container { position: absolute; width: 100%; height: 100%; }
+        #unity-canvas { width: 100%; height: 100%; background: #000; }
+        #loading-overlay {
+            position: absolute; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #0d0d1a 0%, #1a1a35 100%);
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            font-family: Arial, sans-serif; color: #fff; z-index: 100;
+        }
+        .loader-icon { font-size: 64px; margin-bottom: 8px; }
+        .loader-title {
+            font-size: 42px; font-weight: bold; letter-spacing: 2px;
+            background: linear-gradient(90deg, #ff6b35, #f7c531);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .loader-sub { font-size: 13px; color: #555; margin-top: 4px; margin-bottom: 40px; }
+        #loading-bar { width: 320px; height: 6px; background: #1e1e3a; border-radius: 3px; overflow: hidden; }
+        #loading-progress {
+            width: 0%; height: 100%;
+            background: linear-gradient(90deg, #ff6b35, #f7c531);
+            border-radius: 3px; transition: width 0.3s ease;
+        }
+        #loading-text { margin-top: 14px; font-size: 13px; color: #555; }
+    </style>
+</head>
+<body>
+    <div id="loading-overlay">
+        <div class="loader-icon">&#x1F52B;</div>
+        <div class="loader-title">TANK STARS</div>
+        <div class="loader-sub">by Playgendary</div>
+        <div id="loading-bar"><div id="loading-progress"></div></div>
+        <div id="loading-text">Starting...</div>
+    </div>
+    <div id="unity-container">
+        <canvas id="unity-canvas" tabindex="-1"></canvas>
+    </div>
+
+    <script>
+    // ── Real Poki bridge (extracted from game-cdn.poki.com/loaders/v3/unity-2020.js) ──
+    // This is the EXACT implementation Poki uses to bridge Unity ↔ SDK
+
+    window.unityGame = null;  // Set to Unity instance after load
+
+    // PokiSDK mock — methods called by game C# via JS plugin
+    window.PokiSDK = {
+        init:                function()      { return Promise.resolve(); },
+        gameLoadingStart:    function()      {},
+        gameLoadingFinished: function()      {},
+        gameplayStart:       function()      {},
+        gameplayStop:        function()      {},
+        commercialBreak:     function()      { return Promise.resolve(); },
+        rewardedBreak:       function()      { return Promise.resolve(false); },
+        isAdBlocked:         function()      { return false; },
+        getLanguage:         function()      { return (navigator.language||'en').split('-')[0]; },
+        getURLParam:         function(n)     { return new URLSearchParams(location.search).get(n)||''; },
+        logError:            function(e)     { console.warn('[PokiSDK] logError:', e); },
+        measure:             function()      {},
+        openExternalLink:    function(u)     { window.open(u,'_blank'); },
+        destroyAd:           function()      {},
+        displayAd:           function()      {},
+        shareableURL:        function()      { return Promise.resolve(location.href); },
+        customEvent:         function()      {},
+        setDebug:            function()      {},
+        getUser:             function()      { return Promise.resolve({}); },
+        getToken:            function()      { return Promise.resolve(''); },
+    };
+    window.poki = window.PokiSDK;
+
+    // Real initPokiBridge from unity-2020.js loader
+    var _n; // stores game object name
+    window.initPokiBridge = function(e) {
+        _n = e;
+        if (window.unityGame) {
+            if (window.pokiReady || window.pokiAdBlock) {
+                if (window.pokiReady) {
+                    console.log('[Bridge] Sending "ready" to', e);
+                    window.unityGame.SendMessage(e, 'ready');
+                } else if (window.pokiAdBlock) {
+                    console.log('[Bridge] Sending "adblock" to', e);
+                    window.unityGame.SendMessage(e, 'adblock');
+                }
+            } else {
+                console.log('[Bridge] unityGame ready, waiting for pokiReady...');
+                window.pokiBridge = e;
+            }
+        } else {
+            console.log('[Bridge] unityGame not ready yet, retrying...');
+            setTimeout(function() { window.initPokiBridge(e); }, 100);
+        }
+    };
+
+    // Real commercialBreak from unity-2020.js
+    window.commercialBreak = function() {
+        return PokiSDK.commercialBreak().then(function() {
+            window.unityGame.SendMessage(_n, 'commercialBreakCompleted');
+        });
+    };
+
+    // Real rewardedBreak from unity-2020.js
+    window.rewardedBreak = function() {
+        return PokiSDK.rewardedBreak().then(function(e) {
+            window.unityGame.SendMessage(_n, 'rewardedBreakCompleted', String(e));
+        });
+    };
+
+    // shareableURL
+    window.shareableURL = function(params) {
+        return PokiSDK.shareableURL(params).then(function(url) {
+            window.unityGame.SendMessage(_n, 'shareableURLResolved', url);
+        }).catch(function() {
+            window.unityGame.SendMessage(_n, 'shareableURLRejected');
+        });
+    };
+    </script>
+
+    <script src="Build/7806c13417f7fdd88a03277c5e04de63.loader.js"></script>
+
+    <script>
+    function updateProgress(text, pct) {
+        document.getElementById('loading-text').textContent = text;
+        document.getElementById('loading-progress').style.width = pct + '%';
+    }
+    updateProgress('Loading engine...', 5);
+
+    createUnityInstance(document.querySelector('#unity-canvas'), {
+        dataUrl:      'Build/da19363fef73f7a6a8ab186d58945c71.data',
+        frameworkUrl: 'Build/86ec667f3727e36b09077e7f789ca015.framework.js',
+        codeUrl:      'Build/90100bddb4ac8a9a6b3b16e67d1a0b8e.wasm',
+        streamingAssetsUrl: 'https://785b74a4-e22d-4d31-90ef-92b80679f7e6.gdn.poki.com/34a362fa-4b92-4956-b93f-e02ef0fb6a91/StreamingAssets',
+        companyName:  'Playgendary',
+        productName:  'Tank Stars',
+        productVersion: '2.7.0',
+    }, function(progress) {
+        updateProgress('Loading... ' + Math.round(progress * 100) + '%', Math.round(progress * 100));
+    }).then(function(instance) {
+        // Step 1: expose Unity instance as window.unityGame (what the real Poki loader does)
+        window.unityGame = instance;
+
+        // Step 2: simulate PokiSDK.init() resolving (real loader does this)
+        // This sets pokiReady and triggers "ready" SendMessage if initPokiBridge already ran
+        PokiSDK.init().then(function() {
+            if (window.pokiBridge) {
+                console.log('[Bridge] PokiSDK ready → SendMessage("ready") to', window.pokiBridge);
+                window.unityGame.SendMessage(window.pokiBridge, 'ready');
+            } else {
+                window.pokiReady = true;
+                console.log('[Bridge] pokiReady = true (initPokiBridge not called yet)');
+            }
+        });
+
+        document.getElementById('loading-overlay').style.display = 'none';
+        console.log('[Tank Stars] Unity + Bridge ready');
+    }).catch(function(msg) {
+        document.getElementById('loading-text').textContent = 'Error: ' + msg;
+        console.error(msg);
+    });
+    </script>
+</body>
+</html>
