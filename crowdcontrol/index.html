@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Count Control Legends</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #231F20; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+    #unity-container { position: relative; width: 100%; height: 100%; }
+    #unity-canvas { width: 100%; height: 100%; display: block; }
+    #loading-overlay {
+      position: absolute; inset: 0; background: #231F20;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: white; font-family: sans-serif; z-index: 10;
+    }
+    #loading-bar-bg { width: 300px; height: 8px; background: #444; border-radius: 4px; margin-top: 20px; }
+    #loading-bar { height: 100%; width: 0%; background: #ff6b35; border-radius: 4px; transition: width 0.2s; }
+    h2 { font-size: 1.4em; letter-spacing: 2px; }
+  </style>
+</head>
+<body>
+<div id="unity-container">
+  <canvas id="unity-canvas"></canvas>
+  <div id="loading-overlay">
+    <h2>COUNT CONTROL LEGENDS</h2>
+    <div id="loading-bar-bg"><div id="loading-bar"></div></div>
+    <p id="loading-text" style="margin-top:10px;font-size:0.85em;color:#aaa">Loading...</p>
+  </div>
+</div>
+
+<script>
+  // ── Mock PokiSDK (game runs without ads) ─────────────────────────────────
+  window.PokiSDK = {
+    init: () => Promise.resolve(),
+    gameLoadingStart: () => {},
+    gameLoadingFinished: () => {},
+    gameplayStart: () => {},
+    gameplayStop: () => {},
+    commercialBreak: () => Promise.resolve(),
+    rewardedBreak: () => Promise.resolve(true),
+    displayAd: () => Promise.resolve(),
+    setDebug: () => {},
+  };
+  window.pokiReady = true;
+
+  // ── Poki Unity Bridge ─────────────────────────────────────────────────────
+  let _pokiBridgeName = null;
+  window.initPokiBridge = function(gameName) {
+    _pokiBridgeName = gameName;
+    function tryReady() {
+      if (window.unityGame) {
+        try { window.unityGame.SendMessage(gameName, 'ready'); } catch(e) {}
+      } else { setTimeout(tryReady, 100); }
+    }
+    tryReady();
+  };
+  window.commercialBreak = function() {
+    if (_pokiBridgeName && window.unityGame) {
+      setTimeout(() => {
+        try { window.unityGame.SendMessage(_pokiBridgeName, 'commercialBreakCompleted'); } catch(e) {}
+      }, 50);
+    }
+  };
+  window.rewardedBreak = function() {
+    if (_pokiBridgeName && window.unityGame) {
+      setTimeout(() => {
+        try { window.unityGame.SendMessage(_pokiBridgeName, 'rewardedBreakCompleted', 'true'); } catch(e) {}
+      }, 50);
+    }
+  };
+  window.shareableURL = function() {};
+
+  // ── Load Unity ────────────────────────────────────────────────────────────
+  const bar = document.getElementById('loading-bar');
+  const txt = document.getElementById('loading-text');
+  const overlay = document.getElementById('loading-overlay');
+
+  const script = document.createElement('script');
+  script.src = 'Build/c7cea366ea8eaab59722a8d24073643f.loader.js';
+  script.onload = function() {
+    createUnityInstance(document.getElementById('unity-canvas'), {
+      dataUrl:          'Build/180b03074745078a7fe292b2c22f6060.data.unityweb',
+      frameworkUrl:     'Build/2320a17ab13f3e61f4a62a2cc0382528.framework.js.unityweb',
+      codeUrl:          'Build/f1c87ec2ef0c4ed9b3c34bb439b0c5de.wasm.unityweb',
+      streamingAssetsUrl: 'StreamingAssets',
+      companyName:      'Jungle Tavern',
+      productName:      'Count Control Legends',
+      productVersion:   '1.0.0',
+    }, function(progress) {
+      bar.style.width = (progress * 100) + '%';
+      txt.textContent = 'Loading ' + Math.round(progress * 100) + '%';
+    }).then(function(instance) {
+      window.unityGame = instance;
+      overlay.style.display = 'none';
+      PokiSDK.gameLoadingFinished();
+      PokiSDK.gameplayStart();
+    }).catch(function(err) {
+      txt.textContent = 'Error: ' + err;
+      console.error(err);
+    });
+  };
+  document.head.appendChild(script);
+</script>
+</body>
+</html>
