@@ -93,17 +93,47 @@ console.log("[SG] DD_LOGS/DD_RUM mocked");
   // Load/save guest account from localStorage for persistent progress
   var SAVE_KEY = "sg_guest_profile";
   var _saved = (function(){ try{ return JSON.parse(localStorage.getItem(SAVE_KEY)||"null"); }catch(e){ return null; }})();
-  var GUEST_UUID = (_saved && _saved.uuid) || _mkUUID();
+  // IMPORTANT: Validate that saved UUID only contains valid hex chars (C# Guid.TryParse is strict)
+  var _UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+  var _savedUUID = _saved && _saved.uuid;
+  var GUEST_UUID = (_savedUUID && _UUID_RE.test(_savedUUID)) ? _savedUUID : _mkUUID();
   var GUEST_NAME = (_saved && _saved.name) || "Stumbler";
   try{ localStorage.setItem(SAVE_KEY, JSON.stringify({uuid:GUEST_UUID,name:GUEST_NAME,version:"3"})); }catch(e){}
   var SIMPLE_TOKEN = "sg-tok-" + GUEST_UUID.replace(/-/g,"").slice(0,16) + "-" + Date.now().toString(36);
-  var ME = JSON.stringify({id:GUEST_UUID,player_id:GUEST_UUID,username:GUEST_NAME,name:GUEST_NAME,avatar:"",level:1,coins:9999,gems:9999,crowns:99,trophies:0,isGuest:true,is_guest:true,locale:"en",country:"US",created_at:"2024-01-01T00:00:00Z",updated_at:"2024-01-01T00:00:00Z"});
+  var NOW_ISO = new Date().toISOString();
+  var EPOCH_ISO = "2024-01-01T00:00:00.000Z";
+  var ME = JSON.stringify({id:GUEST_UUID,player_id:GUEST_UUID,stumbleId:GUEST_UUID,username:GUEST_NAME,name:GUEST_NAME,avatar:"",level:1,coins:9999,gems:9999,crowns:99,trophies:0,isGuest:true,is_guest:true,locale:"en",country:"US",created_at:EPOCH_ISO,updated_at:NOW_ISO});
   var SCOPELY_CONFIG = JSON.stringify({sdk_version:"4.0.0",version:"4.0.0",min_supported_version:"1.0.0",features:{},environment:"production",endpoints:{}});
   var SCOPELY_REGISTER = JSON.stringify({id:"guest-device-0001",token:"mock-collector-token",expires_in:86400});
   var SCOPELY_FENRIR = JSON.stringify({version:"1.0.0",min_version:"1.0.0",services:{},endpoints:{}});
-  // LoginV2 flat fields + data/result wrappers (covers all C# deserialization patterns)
+  // Build LoginV2 response matching C# LoginResponse / UserObjectDto / UserResponse DTO fields
+  // Fields discovered from IL2CPP metadata (Stumble.Common.Runtime.Dto.Login|LoginResponse)
+  var _userObj = {
+    id: GUEST_UUID, stumbleId: GUEST_UUID,
+    username: GUEST_NAME, name: GUEST_NAME,
+    created: EPOCH_ISO, lastLogin: NOW_ISO, createdAt: EPOCH_ISO,
+    secondsSinceCreated: 0,
+    newsVersion: 0, latestNewsIdBackend: 0, availableNewsVersion: 0,
+    skillRating: 1000,
+    isBanned: false,
+    hasBattlePass: false,
+    kidFriendlyMode: "DISABLED",
+    termsOfServiceVersion: 0, termsOfServiceAccepted: false,
+    platformType: "WEB",
+    balances: {coins:{amount:9999,maxAmount:999999,secondsSince:0,secondsPerUnit:0,lastGiven:NOW_ISO},gems:{amount:9999}},
+    inventory: [], animations: [],
+    ftue: null, userFlags: null, userGlobalLtcEventInfo: null,
+    offerSequenceState: null, stumbleDrops: null,
+    hiddenShopSections: [], hiddenShopOffers: [],
+    receipts: [], abilitiesMigration: null,
+    rewardHash: null, featuresEnabled: [],
+    inventoryShards: [], helpshiftUserIdentity: null,
+    purchasedOffer: null, featureFlags: {}, deviceIdLogged: false
+  };
   var _lf = {
-    player_id:GUEST_UUID, playerId:GUEST_UUID, account_id:GUEST_UUID, accountId:GUEST_UUID, id:GUEST_UUID,
+    // Flat keys (both snake_case and camelCase) for maximal compatibility
+    player_id:GUEST_UUID, playerId:GUEST_UUID, account_id:GUEST_UUID, accountId:GUEST_UUID,
+    id:GUEST_UUID, stumbleId:GUEST_UUID,
     access_token:SIMPLE_TOKEN, accessToken:SIMPLE_TOKEN, token:SIMPLE_TOKEN,
     token_type:"Bearer", tokenType:"Bearer", expires_in:86400, expiresIn:86400,
     refresh_token:"sg-refresh-"+GUEST_UUID.slice(0,8), refreshToken:"sg-refresh-"+GUEST_UUID.slice(0,8),
@@ -111,11 +141,19 @@ console.log("[SG] DD_LOGS/DD_RUM mocked");
     session_token:"sg-session-"+GUEST_UUID.slice(0,8), sessionToken:"sg-session-"+GUEST_UUID.slice(0,8),
     game_token:"sg-game-"+GUEST_UUID.slice(0,8), gameToken:"sg-game-"+GUEST_UUID.slice(0,8),
     is_new_player:false, isNewPlayer:false,
-    player:{id:GUEST_UUID,player_id:GUEST_UUID,name:GUEST_NAME,username:GUEST_NAME,avatar:"",level:1,is_guest:true,isGuest:true,created_at:"2024-01-01T00:00:00Z",updated_at:"2024-01-01T00:00:00Z"},
-    user:{id:GUEST_UUID,player_id:GUEST_UUID,name:GUEST_NAME,username:GUEST_NAME,avatar:"",level:1,is_guest:true,isGuest:true}
+    // LoginResponse-specific fields
+    versionPolicy: null, platformStoreConfigurations: null, googleAuthMigrated: false,
+    // Nested user object (both "user" and "player" keys)
+    user: _userObj, player: _userObj,
+    // Flat user fields at top level too
+    username: GUEST_NAME, name: GUEST_NAME,
+    created: EPOCH_ISO, lastLogin: NOW_ISO,
+    skillRating: 1000, isBanned: false, hasBattlePass: false,
+    balances: _userObj.balances, inventory: [], animations: [],
+    featuresEnabled: [], featureFlags: {}
   };
-  _lf.data = {player_id:GUEST_UUID,access_token:SIMPLE_TOKEN,token:SIMPLE_TOKEN,token_type:"Bearer",expires_in:86400,is_new_player:false};
-  _lf.result = {player_id:GUEST_UUID,access_token:SIMPLE_TOKEN,token:SIMPLE_TOKEN,token_type:"Bearer",expires_in:86400,is_new_player:false};
+  _lf.data = {player_id:GUEST_UUID,stumbleId:GUEST_UUID,access_token:SIMPLE_TOKEN,token:SIMPLE_TOKEN,token_type:"Bearer",expires_in:86400,is_new_player:false};
+  _lf.result = _lf.data;
   var LOGIN_V2 = JSON.stringify(_lf);
   console.log("[SG] LoginV2 uuid:", GUEST_UUID, "token:", SIMPLE_TOKEN.substring(0,30));
   // (LOGIN_V2 defined above)
