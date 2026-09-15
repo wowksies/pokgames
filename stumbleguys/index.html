@@ -84,14 +84,52 @@ console.log("[SG] DD_LOGS/DD_RUM mocked");
     "api.stumbleguys.com/clans/me": d("eyJ1c2VyUmVxdWVzdHMiOnt9fQ=="),
   };
   var ME = JSON.stringify({id:"guest-0001",username:"Stumbler",avatar:"",level:1,coins:9999,gems:9999,crowns:99,trophies:0,isGuest:true,locale:"en",country:"US"});
+  var SCOPELY_CONFIG = JSON.stringify({
+    sdk_version: "4.0.0",
+    version: "4.0.0",
+    min_supported_version: "1.0.0",
+    features: {},
+    environment: "production",
+    endpoints: {}
+  });
+  var SCOPELY_REGISTER = JSON.stringify({
+    id: "guest-device-0001",
+    token: "mock-collector-token",
+    expires_in: 86400
+  });
+  var SCOPELY_FENRIR = JSON.stringify({
+    version: "1.0.0",
+    min_version: "1.0.0",
+    services: {},
+    endpoints: {}
+  });
+  var LOGIN_V2 = JSON.stringify({
+    token: "mock-login-token",
+    refresh_token: "mock-refresh-token",
+    expires_in: 86400,
+    user: {id:"guest-0001",username:"Stumbler",avatar:"",level:1,isGuest:true},
+    player_id: "guest-0001"
+  });
   function find(url){
+    // Specific API mocks first
     for(var k in MOCKS){ if(url.indexOf(k)!==-1) return MOCKS[k]; }
+    // Stumble Guys API
     if(url.indexOf("api.stumbleguys.com")!==-1){
-      return (url.indexOf("/me")!==-1||url.indexOf("/user")!==-1) ? ME : "{}";
+      if(url.indexOf("login")!==-1) return LOGIN_V2;
+      if(url.indexOf("/me")!==-1||url.indexOf("/user")!==-1) return ME;
+      return "{}";
     }
-    if(url.indexOf("config.sdk.scopely.io")!==-1) return JSON.stringify({sdk_version:"4.0",features:{}});
-    if(url.indexOf("static.aprod.scopely.io")!==-1) return "{}";
+    // Scopely SDK config
+    if(url.indexOf("config.sdk.scopely.io")!==-1) return SCOPELY_CONFIG;
+    // Scopely Fenrir resolver (version policy)
+    if(url.indexOf("fenrir-resolver")!==-1||url.indexOf("fenrir")!==-1) return SCOPELY_FENRIR;
+    // Scopely collector/register
+    if(url.indexOf("collector.scopely.io")!==-1||url.indexOf("register.scopely")!==-1) return SCOPELY_REGISTER;
+    // All other Scopely/aprod domains
+    if(url.indexOf("scopely.io")!==-1||url.indexOf("aprod.scopely")!==-1) return "{}";
+    // Localization
     if(url.indexOf("localization2.stumbleguys.com")!==-1) return "{}";
+    // Analytics/ads/misc - return empty success
     if(url.indexOf("devs-api.poki.com")!==-1) return "{}";
     if(url.indexOf("hb.vntsm.com")!==-1) return "{}";
     if(url.indexOf("bat.bing.com")!==-1) return "{}";
@@ -99,6 +137,8 @@ console.log("[SG] DD_LOGS/DD_RUM mocked");
     if(url.indexOf("helpshift.com")!==-1) return "{}";
     if(url.indexOf("usercentrics.eu")!==-1) return "{}";
     if(url.indexOf("pusher.com")!==-1) return "{}";
+    if(url.indexOf("cdp.cloud.unity3d.com")!==-1) return "{}";
+    if(url.indexOf("auth0.com")!==-1) return "{}";
     return null;
   }
   var _fetch = window.fetch;
