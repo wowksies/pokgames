@@ -32,23 +32,35 @@
   </button>
 </div>
 <script>
-/* 1 - Datadog mock: Unity calls _DDLogs_InitLogs which needs DD_LOGS */
+/* 1 - Datadog mock: Unity calls _DDLogs_InitLogs + _DDLogs_CreateLogger */
 var _noop = function(){};
+function _makeLogger() {
+  return {
+    log:_noop, info:_noop, warn:_noop, error:_noop, debug:_noop,
+    setHandler:_noop, setLevel:_noop,
+    addContext:_noop, setContext:_noop, removeContext:_noop,
+    getContext: function(){ return {}; }, clearContext:_noop,
+    setContextProperty:_noop, removeContextProperty:_noop
+  };
+}
 window.DD_LOGS = {
-  logger: { log:_noop, info:_noop, warn:_noop, error:_noop, debug:_noop },
+  logger: _makeLogger(),
   init:_noop,
   onReady: function(cb){ try{ cb(); }catch(e){} },
-  addLoggerGlobalContext:_noop,
-  setLoggerGlobalContext:_noop,
-  createLogger: function(){ return window.DD_LOGS.logger; },
-  getLogger:    function(){ return window.DD_LOGS.logger; }
+  addLoggerGlobalContext:_noop, setLoggerGlobalContext:_noop,
+  getLoggerGlobalContext: function(){ return {}; },
+  removeLoggerGlobalContext:_noop, clearLoggerGlobalContext:_noop,
+  createLogger: function(){ return _makeLogger(); },
+  getLogger:    function(){ return _makeLogger(); }
 };
 window.DD_RUM = {
   init:_noop,
   onReady: function(cb){ try{ cb(); }catch(e){} },
-  addRumGlobalContext:_noop,
-  setRumGlobalContext:_noop,
-  startView:_noop, addAction:_noop, addError:_noop
+  addRumGlobalContext:_noop, setRumGlobalContext:_noop,
+  removeRumGlobalContext:_noop, clearRumGlobalContext:_noop,
+  getInternalContext: function(){ return {}; },
+  startView:_noop, addAction:_noop, addError:_noop,
+  startSessionReplayRecording:_noop, stopSessionReplayRecording:_noop
 };
 console.log("[SG] DD_LOGS/DD_RUM mocked");
 
