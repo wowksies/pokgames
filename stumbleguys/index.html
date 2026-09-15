@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stumble Guys</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; background: #0e1528; font-family: sans-serif; overflow: hidden; }
+    #container {
+      position: relative; width: 100%; height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #unity-canvas { width: 100%; height: 100%; display: block; }
+    #loading {
+      position: absolute; inset: 0; background: #0e1528;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 20px; color: #fff; z-index: 10;
+    }
+    #loading img { width: 213px; height: 120px; }
+    #progress-bar {
+      width: 480px; max-width: 90vw; height: 36px;
+      border: 2px solid #000; border-radius: 8px;
+      background: transparent; overflow: hidden; position: relative;
+    }
+    #progress-fill {
+      height: 100%; background: linear-gradient(90deg,#f97316,#fb923c);
+      border-radius: 6px; transition: width 0.3s ease; width: 0%;
+    }
+    #progress-text {
+      position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+      color: #fde68a; font-weight: bold; font-size: 14px;
+    }
+    #error { color: #f87171; text-align: center; max-width: 500px; display: none; padding: 0 20px; }
+    #fullscreen-btn {
+      position: absolute; top: 10px; right: 10px; z-index: 5;
+      background: rgba(0,0,0,0.5); border: none; border-radius: 6px;
+      padding: 8px; cursor: pointer; display: none;
+    }
+    #fullscreen-btn svg { width: 24px; height: 24px; fill: white; }
+  </style>
+</head>
+<body>
+<div id="container">
+  <canvas id="unity-canvas" tabindex="-1"></canvas>
+  <div id="loading">
+    <img src="https://www.stumbleguys.com/images/loader/running-stumbler.gif" alt="Loading...">
+    <div id="progress-bar">
+      <div id="progress-fill"></div>
+      <span id="progress-text">0 %</span>
+    </div>
+    <div id="error"></div>
+  </div>
+  <button id="fullscreen-btn" title="Fullscreen" onclick="goFullscreen()">
+    <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+  </button>
+</div>
+
+<script>
+// ============================================================
+// MOCK: Venatus (__VM) ad system — fires "complete" instantly
+// The game shows a video ad before the Unity canvas appears.
+// We mock it so it completes in 200ms with no actual ad.
+// ============================================================
+(function () {
+  function createMockVM() {
+    return {
+      push: function (cb) {
+        setTimeout(function () {
+          var EVENTS = {
+            RENDERED: 'RENDERED',
+            SLOT_VIDEO_AD_STARTED: 'SLOT_VIDEO_AD_STARTED',
+            SLOT_VIDEO_ALL_ADS_COMPLETE: 'SLOT_VIDEO_ALL_ADS_COMPLETE',
+            SLOT_VIDEO_AD_SKIPPED: 'SLOT_VIDEO_AD_SKIPPED',
+            SLOT_VIDEO_AD_ERROR: 'SLOT_VIDEO_AD_ERROR'
+          };
+          var handlers = {};
+          var placement = {
+            anyName: 'video_2',
+            on: function (e, fn) { handlers[e] = fn; },
+            off: function (e) { delete handlers[e]; }
+          };
+          var mockApi = {
+            placements: [],
+            removePlacement: function () {}
+          };
+          var mockLib = {
+            Placement: { PLACEMENT_EVENTS: EVENTS },
+            Config: {
+              get: function () {
+                return {
+                  activate: function () {
+                    return {
+                      videoApi: function (placementCb) {
+                        placementCb(placement);
+                        // Fire "all ads complete" — triggers onComplete → shows Unity
+                        setTimeout(function () {
+                          if (handlers[EVENTS.SLOT_VIDEO_ALL_ADS_COMPLETE])
+                            handlers[EVENTS.SLOT_VIDEO_ALL_ADS_COMPLETE]();
+                        }, 200);
+                      }
+                    };
+                  }
+                };
+              }
+            }
+          };
+          cb(mockApi, mockLib);
+        }, 100);
+      }
+    };
+  }
+
+  window.__VM = createMockVM();
+
+  // ============================================================
+  // MOCK: In-game rewarded ad bridge — Unity calls these via JS
+  // When Unity requests a rewarded ad, we call the success CB.
+  // ============================================================
+
+  // Pattern 1: Unity calls window.showRewardedAd(callbackName)
+  window.showRewardedAd = window.ShowRewardedAd = function (cbName) {
+    setTimeout(function () {
+      if (window.unityInstance) {
+        try { window.unityInstance.SendMessage('AdsManager', cbName || 'OnRewardedAdComplete', '1'); } catch (e) {}
+        try { window.unityInstance.SendMessage('AdManager',  cbName || 'OnRewardedAdComplete', '1'); } catch (e) {}
+        try { window.unityInstance.SendMessage('AdsController', 'OnRewardedAdFinished', 'true'); } catch (e) {}
+      }
+      if (typeof window[cbName] === 'function') window[cbName](true);
+    }, 300);
+  };
+
+  // Pattern 2: Unity calls window.showAd(type, placementId, callback)
+  window.showAd = function (type, placement, cb) {
+    setTimeout(function () { if (typeof cb === 'function') cb({ success: true }); }, 300);
+  };
+
+  // Pattern 3: IronSource-style
+  window.IronSource = { showRewardedVideo: function () { window.showRewardedAd(); } };
+
+  // Pattern 4: Google IMA / adBreak
+  window.adBreak = function (opts) { if (opts && opts.afterAd) setTimeout(opts.afterAd, 200); };
+  window.adConfig = function () {};
+
+  console.log('[Stumble Guys] Ad mocks ready — all ads grant instant rewards');
+})();
+</script>
+
+<script src="/stumbleguys/cdn/WebGL.loader.js"></script>
+<script>
+(function () {
+  var canvas = document.getElementById('unity-canvas');
+  var loading = document.getElementById('loading');
+  var fill = document.getElementById('progress-fill');
+  var text = document.getElementById('progress-text');
+  var errDiv = document.getElementById('error');
+  var fsBtn = document.getElementById('fullscreen-btn');
+
+  createUnityInstance(canvas, {
+    dataUrl:            '/stumbleguys/cdn/WebGL.data.unityweb',
+    frameworkUrl:       '/stumbleguys/cdn/WebGL.framework.js.unityweb',
+    codeUrl:            '/stumbleguys/cdn/WebGL.wasm.unityweb',
+    streamingAssetsUrl: '/stumbleguys/cdn/StreamingAssets',
+    companyName:        'Scopely',
+    productName:        'Stumble Guys',
+    productVersion:     '0.102',
+    showBanner: function (msg, type) {
+      if (type === 'error') {
+        errDiv.textContent = msg;
+        errDiv.style.display = 'block';
+      }
+      console.warn('[Unity Banner]', msg);
+    }
+  }, function (progress) {
+    var pct = Math.round(progress * 100);
+    fill.style.width = pct + '%';
+    text.textContent = pct + ' %';
+  }).then(function (instance) {
+    window.unityInstance = instance;
+    loading.style.display = 'none';
+    fsBtn.style.display = 'block';
+    // Notify Unity that JS bridges are ready
+    try { instance.SendMessage('ScopelyId',      'SetUnityInstanceAvailable'); } catch (e) {}
+    try { instance.SendMessage('PusherManager',  'SetUnityInstanceAvailable'); } catch (e) {}
+    console.log('[Stumble Guys] Unity ready');
+  }).catch(function (err) {
+    console.error('[Unity] Load failed:', err);
+    errDiv.textContent = 'Failed to load: ' + err.message;
+    errDiv.style.display = 'block';
+  });
+
+  window.goFullscreen = function () {
+    if (window.unityInstance) window.unityInstance.SetFullscreen(1);
+  };
+})();
+</script>
+</body>
+</html>

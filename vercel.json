@@ -1,1 +1,1 @@
-{"rewrites":[{"source":"/tankstars/api/cdn/:path*","destination":"/api/proxy?game=tankstars&p=:path*"}]}
+{"rewrites":[{"source":"/tankstars/api/cdn/:path*","destination":"/api/proxy?game=tankstars&p=:path*"},{"source":"/stumbleguys/cdn/:path*","destination":"/stumbleguys/api/cdn?p=:path*"}]}
