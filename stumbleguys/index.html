@@ -140,12 +140,12 @@ console.log("[SG] DD_LOGS/DD_RUM mocked");
     if(url.indexOf("auth0.com")!==-1) return "{}";
     return null;
   }
-  // Gzip-compress a string — Unity manually decompresses via C# GZipStream
+  // Raw DEFLATE compress — Unity uses C# DeflateStream (not GZipStream) to decompress
   function _sgGzip(str) {
     return new Promise(function(resolve, reject) {
       try {
         var enc = new TextEncoder();
-        var cs = new CompressionStream("gzip");
+        var cs = new CompressionStream("deflate-raw");
         var writer = cs.writable.getWriter();
         writer.write(enc.encode(str));
         writer.close();
