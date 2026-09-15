@@ -88,26 +88,32 @@ console.log("[SG] DD_LOGS/DD_RUM mocked");
   var _saved = (function(){ try{ return JSON.parse(localStorage.getItem(SAVE_KEY)||"null"); }catch(e){ return null; }})();
   var GUEST_ID = (_saved && _saved.player_id) || ("guest-" + Math.random().toString(36).slice(2,10));
   var GUEST_NAME = (_saved && _saved.name) || "Stumbler";
-  try{ localStorage.setItem(SAVE_KEY, JSON.stringify({player_id:GUEST_ID,name:GUEST_NAME,version:"1"})); }catch(e){}
-  var FAKE_JWT = "eyJhbGciOiJub25lIn0." + btoa(JSON.stringify({sub:GUEST_ID,name:GUEST_NAME,iat:Math.floor(Date.now()/1000),exp:Math.floor(Date.now()/1000)+86400})) + ".";
-  var ME = JSON.stringify({id:GUEST_ID,player_id:GUEST_ID,username:GUEST_NAME,name:GUEST_NAME,avatar:"",level:1,coins:9999,gems:9999,crowns:99,trophies:0,isGuest:true,is_guest:true,locale:"en",country:"US",created_at:"2024-01-01T00:00:00Z",updated_at:"2024-01-01T00:00:00Z"});
+  // UUID-format so Scopely UUID validators don't reject it
+  var GUEST_UUID = (_saved && _saved.uuid) || ("00000000-0000-4000-8000-" + GUEST_ID.replace("guest-","").padEnd(12,"0").slice(0,12));
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify({player_id:GUEST_ID,uuid:GUEST_UUID,name:GUEST_NAME,version:"2"})); }catch(e){}
+  var SIMPLE_TOKEN = "sg-tok-" + GUEST_ID + "-" + Date.now().toString(36);
+  var ME = JSON.stringify({id:GUEST_UUID,player_id:GUEST_UUID,username:GUEST_NAME,name:GUEST_NAME,avatar:"",level:1,coins:9999,gems:9999,crowns:99,trophies:0,isGuest:true,is_guest:true,locale:"en",country:"US",created_at:"2024-01-01T00:00:00Z",updated_at:"2024-01-01T00:00:00Z"});
   var SCOPELY_CONFIG = JSON.stringify({sdk_version:"4.0.0",version:"4.0.0",min_supported_version:"1.0.0",features:{},environment:"production",endpoints:{}});
   var SCOPELY_REGISTER = JSON.stringify({id:"guest-device-0001",token:"mock-collector-token",expires_in:86400});
   var SCOPELY_FENRIR = JSON.stringify({version:"1.0.0",min_version:"1.0.0",services:{},endpoints:{}});
-  // Comprehensive LoginV2 - covers all possible C# field name variants (snake_case + camelCase)
-  var LOGIN_V2 = JSON.stringify({
-    player_id:GUEST_ID, playerId:GUEST_ID, account_id:GUEST_ID, accountId:GUEST_ID,
-    access_token:FAKE_JWT, accessToken:FAKE_JWT, token:FAKE_JWT,
-    token_type:"Bearer", tokenType:"Bearer",
-    expires_in:86400, expiresIn:86400,
+  // LoginV2 flat fields + data/result wrappers (covers all C# deserialization patterns)
+  var _lf = {
+    player_id:GUEST_UUID, playerId:GUEST_UUID, account_id:GUEST_UUID, accountId:GUEST_UUID, id:GUEST_UUID,
+    access_token:SIMPLE_TOKEN, accessToken:SIMPLE_TOKEN, token:SIMPLE_TOKEN,
+    token_type:"Bearer", tokenType:"Bearer", expires_in:86400, expiresIn:86400,
     refresh_token:"sg-refresh-"+GUEST_ID, refreshToken:"sg-refresh-"+GUEST_ID,
-    id_token:FAKE_JWT, idToken:FAKE_JWT,
-    scope:"openid profile email offline_access",
+    id_token:SIMPLE_TOKEN, idToken:SIMPLE_TOKEN, scope:"openid profile email offline_access",
     session_token:"sg-session-"+GUEST_ID, sessionToken:"sg-session-"+GUEST_ID,
     game_token:"sg-game-"+GUEST_ID, gameToken:"sg-game-"+GUEST_ID,
-    player:{id:GUEST_ID,player_id:GUEST_ID,name:GUEST_NAME,username:GUEST_NAME,avatar:"",level:1,is_guest:true,isGuest:true,created_at:"2024-01-01T00:00:00Z",updated_at:"2024-01-01T00:00:00Z"},
-    user:{id:GUEST_ID,player_id:GUEST_ID,name:GUEST_NAME,username:GUEST_NAME,avatar:"",level:1,is_guest:true,isGuest:true}
-  });
+    is_new_player:false, isNewPlayer:false,
+    player:{id:GUEST_UUID,player_id:GUEST_UUID,name:GUEST_NAME,username:GUEST_NAME,avatar:"",level:1,is_guest:true,isGuest:true,created_at:"2024-01-01T00:00:00Z",updated_at:"2024-01-01T00:00:00Z"},
+    user:{id:GUEST_UUID,player_id:GUEST_UUID,name:GUEST_NAME,username:GUEST_NAME,avatar:"",level:1,is_guest:true,isGuest:true}
+  };
+  _lf.data = {player_id:GUEST_UUID,access_token:SIMPLE_TOKEN,token:SIMPLE_TOKEN,token_type:"Bearer",expires_in:86400,is_new_player:false};
+  _lf.result = {player_id:GUEST_UUID,access_token:SIMPLE_TOKEN,token:SIMPLE_TOKEN,token_type:"Bearer",expires_in:86400,is_new_player:false};
+  var LOGIN_V2 = JSON.stringify(_lf);
+  console.log("[SG] LoginV2 body:", LOGIN_V2.substring(0,150));
+  // (LOGIN_V2 defined above)
   function find(url){
     for(var k in MOCKS){ if(url.indexOf(k)!==-1) return MOCKS[k]; }
     if(url.indexOf("api.stumbleguys.com")!==-1){
