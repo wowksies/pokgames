@@ -145,6 +145,15 @@ console.log("[SG] DD_LOGS/DD_RUM mocked");
     var url = (typeof input==="string") ? input : ((input && input.url) || "");
     var m = find(url);
     if(m !== null){
+      // Log full request details for login/v2 to diagnose response format
+      if(url.indexOf("login")!==-1 && url.indexOf("v2")!==-1){
+        var logInit = init || {};
+        var hdrs = {};
+        try{ if(logInit.headers){ var hi=new Headers(logInit.headers); hi.forEach(function(v,k){hdrs[k]=v;}); } }catch(e){}
+        console.log("[SG] login/v2 REQUEST:", logInit.method||"GET", JSON.stringify(hdrs));
+        if(logInit.body){ try{ console.log("[SG] login/v2 BODY:", typeof logInit.body === "string" ? logInit.body.substring(0,300) : "[non-string body]"); }catch(e){} }
+        console.log("[SG] login/v2 RESPONSE:", m.substring(0,200));
+      }
       console.log("[Mock]", url.substring(0,80));
       return Promise.resolve(new Response(m||"{}", {status:200, headers:{"Content-Type":"application/json","Access-Control-Allow-Origin":"*"}}));
     }
