@@ -4,7 +4,6 @@ export const config = { runtime: 'edge' };
 const CDN_BASE = 'https://live-assets2.web.stumbleguys.com/unity/0.102/live/125801';
 
 export default async function handler(req) {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, {
       status: 204,
