@@ -5,18 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Stumble Guys</title>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { width: 100%; height: 100%; background: #0e1528; overflow: hidden; }
-    #container { position: relative; width: 100%; height: 100vh; display: flex; align-items: center; justify-content: center; }
-    #unity-canvas { width: 100%; height: 100%; display: block; }
-    #loading { position: absolute; inset: 0; background: #0e1528; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; color: #fff; z-index: 10; }
-    #loading img { width: 213px; height: 120px; }
-    #progress-bar { width: 480px; max-width: 90vw; height: 36px; border: 2px solid #000; border-radius: 8px; background: transparent; overflow: hidden; position: relative; }
-    #progress-fill { height: 100%; background: linear-gradient(90deg,#f97316,#fb923c); border-radius: 6px; transition: width 0.3s ease; width: 0%; }
-    #progress-text { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #fde68a; font-weight: bold; font-size: 14px; }
-    #error { color: #f87171; text-align: center; max-width: 500px; display: none; padding: 0 20px; font-size: 14px; }
-    #fullscreen-btn { position: absolute; top: 10px; right: 10px; z-index: 5; background: rgba(0,0,0,0.5); border: none; border-radius: 6px; padding: 8px; cursor: pointer; display: none; }
-    #fullscreen-btn svg { width: 24px; height: 24px; fill: white; }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{width:100%;height:100%;background:#0e1528;overflow:hidden}
+    #container{position:relative;width:100%;height:100vh;display:flex;align-items:center;justify-content:center}
+    #unity-canvas{width:100%;height:100%;display:block}
+    #loading{position:absolute;inset:0;background:#0e1528;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;color:#fff;z-index:10}
+    #loading img{width:213px;height:120px}
+    #progress-bar{width:480px;max-width:90vw;height:36px;border:2px solid #000;border-radius:8px;background:transparent;overflow:hidden;position:relative}
+    #progress-fill{height:100%;background:linear-gradient(90deg,#f97316,#fb923c);border-radius:6px;transition:width .3s ease;width:0%}
+    #progress-text{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#fde68a;font-weight:bold;font-size:14px}
+    #error-msg{color:#f87171;text-align:center;max-width:500px;display:none;padding:0 20px;font-size:13px}
+    #fs-btn{position:absolute;top:10px;right:10px;z-index:5;background:rgba(0,0,0,.5);border:none;border-radius:6px;padding:8px;cursor:pointer;display:none}
+    #fs-btn svg{width:24px;height:24px;fill:white}
   </style>
 </head>
 <body>
@@ -24,202 +24,141 @@
   <canvas id="unity-canvas" tabindex="-1"></canvas>
   <div id="loading">
     <img src="https://www.stumbleguys.com/images/loader/running-stumbler.gif" alt="Loading...">
-    <div id="progress-bar">
-      <div id="progress-fill"></div>
-      <span id="progress-text">0 %</span>
-    </div>
-    <div id="error"></div>
+    <div id="progress-bar"><div id="progress-fill"></div><span id="progress-text">0 %</span></div>
+    <div id="error-msg"></div>
   </div>
-  <button id="fullscreen-btn" title="Fullscreen" onclick="if(window.unityInstance)window.unityInstance.SetFullscreen(1)">
+  <button id="fs-btn" onclick="if(window.unityInstance)window.unityInstance.SetFullscreen(1)">
     <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
   </button>
 </div>
-
 <script>
-// ============================================================
-// 1. FETCH INTERCEPTOR - mock all Stumble Guys API calls
-//    so Unity doesn't hang waiting for auth/API responses
-// ============================================================
-(function() {
-  var MOCKS = {
-    'api.stumbleguys.com/bots':                           [{"id":-1287,"username":"\u003C#9DB\u003EThisIsAnEasterEgg"},{"id":-1286,"username":"\u003C#AEC\u003EThisIsAnEasterEgg"},{"id":-1285,"username":"\u003C#CFE\u003EThisIsAnEasterEgg"},{"id":-1284,"username":"\u003C#EFC\u003EThisIsAnEasterEgg"},{"id":-1283,"username":"\u003C#0AA\u003EThisIsAnEasterEgg"},{"id":-1282,"username":"\u003C#1AA\u003EThisIsAnEasterEgg"},{"id":-1281,"username":"\u003C#2AA\u003EThisIsAnEasterEgg"},{"id":-1280,"username":"\u003C#3AA\u003EThisIsAnEasterEgg"},{"id":-1279,"username":"\u003C#4AA\u003EThisIsAnEasterEgg"},{"id":-1278,"username":"\u003C#5BB\u003EThisIsAnEasterEgg"},{"id":-1277,"username":"\u003C#6BB\u003EThisIsAnEasterEgg"},{"id":-1276,"username":"\u003C#7CC\u003EThisIsAnEasterEgg"},{"id":-1275,"username":"\u003C#8CC\u003EThisIsAnEasterEgg"},{"id":-1274,"username":"\u003C#9DD\u003EThisIsAnEasterEgg"},{"id":-1273,"username":"\u003C#ADD\u003EThisIsAnEasterEgg"},{"id":-1272,"username":"\u003C#BEE\u003EThisIsAnEasterEgg"},{"id":-1271,"username":"\u003C#EFF\u003EThisIsAnEasterEgg"},{"id":-1270,"username":"\u003C#E0F\u003EThisIsAnEasterEgg"},{"id":-1269,"username":"Sn0wWr4th"},{"id":-1268,"username":"Cl1ffDr0p"},{"id":-1267,"username":"D3pthCh4rg3"},{"id":-1266,"username":"T1t4nRush"},{"id":-1265,"username":"Fr4m3B3ast"},{"id":-1264,"username":"5hock3d"},{"id":-1263,"username":"xXF34rL3ssXx"},{"id":-1262,"username":"N1t3Howl"},{"id":-1261,"username":"H0p3w1sh"},{"id":-1260,"username":"Kr1ssKr0ss"},{"id":-1259,"username":"F1nalSh0t"},{"id":-1258,"username":"D3rangedX"},{"id":-1257,"username":"T1m3Sh4d3"},{"id":-1256,"username":"P1ngL0rd"},{"id":-1255,"username":"C0nfl1ct"},{"id":-1254,"username":"Thr4shK1ng"},{"id":-1253,"username":"Z0mb1fi3d"},{"id":-1252,"username":"7rigger3d"},{"id":-1251,"username":"S0nicFury"},{"id":-1250,"username":"L0g1k"},{"id":-1249,"username":"Ph4ntomZ"},{"id":-1248,"username":"N0irF4ll"},{"id":-1247,"username":"B4sh3r"},{"id":-1246,"username":"Blitzr4ge"},{"id":-1245,"username":"5urf3rB0y"},{"id":-1244,"username":"Sh1ft3d"},{"id":-1243,"username":"M0narchX"},{"id":-1242,"username":"4thD3gree"},{"id":-1241,"username":"B3t4Blast"},{"id":-1240,"username":"G3n3sisX"},{"id":-1239,"username":"Tr1ckyB1tz"},{"id":-1238,"username":"L0n3P4th"},{"id":-1237,"username":"G4mb1t"},{"id":-1236,"username":"Ov3rr1de"},{"id":-1235,"username":"Sp1ralK1ng"},{"id":-1234,"username":"XenoC0de"},{"id":-1233,"username":"8BallHustl3r"},{"id":-1232,"username":"ClutchW1n"},{"id":-1231,"username":"Dr3adn4ught"},{"id":-1230,"username":"P0lyg0nX"},{"id":-1229,"username":"Cyph3rKid"},{"id":-1228,"username":"R1ghtH00k"},{"id":-1227,"username":"Th3C0unt"},{"id":-1226,"username":"W4rpDr1v3"},{"id":-1225,"username":"Pr1zm4tic"},{"id":-1224,"username":"Fr0z3nSk1n"},{"id":-1223,"username":"C0br4Str1k3"},{"id":-1222,"username":"NullSc0pe"},{"id":-1221,"username":"C4st3ll0"},{"id":-1220,"username":"Dr4gnF1re"},{"id":-1219,"username":"Gl4ssJ4w"},{"id":-1218,"username":"Tw1lightz"},{"id":-1217,"username":"Z1pp3r"},{"id":-1216,"username":"V3rifyr"},{"id":-1215,"username":"M3ltD0wn"},{"id":-1214,"username":"Sh0ckBlast"},{"id":-1213,"username":"5lic3Ndic3"},{"id":-1212,"username":"D34dL1ft"},{"id":-1211,"username":"Bl00dPh4ze"},{"id":-1210,"username":"K1ngBlitz"},{"id":-1209,"username":"B0untyHuntr"},{"id":-1208,"username":"N0M3rcy"},{"id":-1207,"username":"Fr0stPunk"},{"id":-1206,"username":"T3chN0va"},{"id":-1205,"username":"L4vaSurge"},{"id":-1204,"username":"H3adrush"},{"id":-1203,"username":"Sp4rk0Matic"},{"id":-1202,"username":"H3xC4st"},{"id":-1201,"username":"R0gueL3af"},{"id":-1200,"username":"Gr1mT1d3"},{"id":-1199,"username":"3choSn1p3"},{"id":-1198,"username":"Kr1pT0n1t3"},{"id":-1197,"username":"Sh4rpB1t"},{"id":-1196,"username":"R0ll0ut"},{"id":-1195,"username":"Z0mb13Ch33z3"},{"id":-1194,"username":"Xc4l1bur"},{"id":-1193,"username":"4byssL0rd"},{"id":-1192,"username":"W1nt3rSh0ck"},{"id":-1191,"username":"Ph0t0n3r"},{"id":-1190,"username":"Bl1tzed"},{"id":-1189,"username":"xXStr1f3Xx"},{"id":-1188,"username":"Sn1p3G33k"},{"id":-1187,"username":"7hunderKid"},{"id":-1186,"username":"Gh0ully"},{"id":-1185,"username":"T3rm1nus"},{"id":-1184,"username":"MrR0ck3t"},{"id":-1183,"username":"Pl4gu3"},{"id":-1182,"username":"Qu1zz1c4l"},{"id":-1181,"username":"K0m3t"},{"id":-1180,"username":"K4y0tic"},{"id":-1179,"username":"Inv1s1bl3"},{"id":-1178,"username":"Xpl0z1v3"},{"id":-1177,"username":"B4tt13H4x0r"},{"id":-1176,"username":"MrSh4dowz"},{"id":-1175,"username":"8itW4rri0r"},{"id":-1174,"username":"Cyb3rV1rus"},{"id":-1173,"username":"xXThr45hXx"},{"id":-1172,"username":"Dr4coN1te"},{"id":-1171,"username":"Thr1lls0n1c"},{"id":-1170,"username":"G3n3r1cX"},{"id":-1169,"username":"Thump3r"},{"id":-1168,"username":"Z3rkus"},{"id":-1167,"username":"L1quidL0g1c"},{"id":-1166,"username":"V0idW4lk3r"},{"id":-1165,"username":"V1p3rT0xic"},{"id":-1164,"username":"Br0k3nR3alm"},{"id":-1163,"username":"Sh4rP3ye"},{"id":-1162,"username":"W1ld3Fy3"},{"id":-1161,"username":"B4rric4d3"},{"id":-1160,"username":"R3sp4wnR"},{"id":-1159,"username":"T1t4n1um"},{"id":-1158,"username":"Qu4dR0cket"},{"id":-1157,"username":"Sw1ftN1nja"},{"id":-1156,"username":"Z0mb13F1sh"},{"id":-1155,"username":"L1ghtsh0w"},{"id":-1154,"username":"Str0b3"},{"id":-1153,"username":"R1otSqu4d"},{"id":-1152,"username":"F4z3G0d"},{"id":-1151,"username":"Ch4osB0lt"},{"id":-1150,"username":"SkyR1pp3r"},{"id":-1149,"username":"Z3r0L4g1"},{"id":-1148,"username":"Y3tiK1ng1"},{"id":-1147,"username":"xXTr1gg3rXx1"},{"id":-1146,"username":"xXKr4k3nXx1"},{"id":-1145,"username":"xXGl1tch3dXx1"},{"id":-1144,"username":"xXDr4g0nSl4y3rXx1"},{"id":-1143,"username":"Wh1t3Kn1ght1"},{"id":-1142,"username":"W4rM4chin31"},{"id":-1141,"username":"V3loc1ty1"},{"id":-1140,"username":"V1rusByte1"},{"id":-1139,"username":"V0rtexed1"},{"id":-1138,"username":"Tw1zT3d1"},{"id":-1137,"username":"Sw4mpF0x1"},{"id":-1136,"username":"Sp33dBl4z31"},{"id":-1135,"username":"Sn1p3dU1"},{"id":-1134,"username":"Sn0wRa1n1"},{"id":-1133,"username":"Sl4pSh0t1"},{"id":-1132,"username":"R4zorZ1"},{"id":-1131,"username":"R4v3nX1"},{"id":-1130,"username":"R4pt0rC4ge1"},{"id":-1129,"username":"R4mp4g31"},{"id":-1128,"username":"R0gu3St4r1"},{"id":-1127,"username":"Qu1kSc0pe1"},{"id":-1126,"username":"Pwnz0rKid1"},{"id":-1125,"username":"Ph4z3Sh1ft1"},{"id":-1124,"username":"Ov3rl0rdX1"},{"id":-1123,"username":"Obsid1an1"},{"id":-1122,"username":"Nuk3D00d1"},{"id":-1121,"username":"N3xuz1"},{"id":-1120,"username":"N1ghtSh4d31"},{"id":-1119,"username":"N00bW4rch1"},{"id":-1118,"username":"M0n0L1th1"},{"id":-1117,"username":"L33tSqu4d1"},{"id":-1116,"username":"L0bbyLurkr1"},{"id":-1115,"username":"Kn1ghtz1"},{"id":-1114,"username":"K4rbon1"},{"id":-1113,"username":"K1ckF1st1"},{"id":-1112,"username":"JuMpSh0tzz1"},{"id":-1111,"username":"J4gger1"},{"id":-1110,"username":"J3st3rX1"},{"id":-1109,"username":"J3diSn1p3r1"},{"id":-1108,"username":"H3xst3r1"},{"id":-1107,"username":"H0lyPwn1"},{"id":-1106,"username":"Gh0stF1re1"},{"id":-1105,"username":"G4m3Ch4ngr1"},{"id":-1104,"username":"G0l3m1"},{"id":-1103,"username":"G0dd3s51"},{"id":-1102,"username":"Fl4shFr33z31"},{"id":-1101,"username":"F1reSt0rm1"},{"id":-1100,"username":"D4rkH4wk1"},{"id":-1099,"username":"Cr1tH1t1"},{"id":-1098,"username":"CR1MS0N1"},{"id":-1097,"username":"Cl4sh3r1"},{"id":-1096,"username":"Ch4rm3r1"},{"id":-1095,"username":"Br3wst3r1"},{"id":-1094,"username":"Br3ak3r_921"},{"id":-1093,"username":"Bl4stZon31"},{"id":-1092,"username":"B1tcr4sh1"},{"id":-1091,"username":"B0ssB3ast1"},{"id":-1090,"username":"5n1p3Pr01"},{"id":-1089,"username":"5h4d0wR1d3r1"},{"id":-1088,"username":"4rc4n31"},{"id":-1087,"username":"T3mp3st12"},{"id":-1086,"username":"H4v0k12"},{"id":-1085,"username":"Fr0stB1t312"},{"id":-1084,"username":"0bl1v10n12"},{"id":-1083,"username":"\u003C#3FC\u003EThisIsAnEasterEgg"},{"id":-1082,"username":"Sparkel Cub"},{"id":-1081,"username":"Frosti Cub"},{"id":-1080,"username":"Briezy Cub"},{"id":-1079,"username":"Zoomy Cub"},{"id":-1078,"username":"Funi Cub"},{"id":-1077,"username":"Happy Cub 7"},{"id":-1076,"username":"Zoomie Cub 2"},{"id":-1075,"username":"Orang Cub"},{"id":-1074,"username":"Funny Cub 4"},{"id":-1073,"username":"Poofi Cub"},{"id":-1072,"username":"Snuggl Cub"},{"id":-1071,"username":"Chunki Cub"},{"id":-1070,"username":"Suny Cub"},{"id":-1069,"username":"Flip Cub 5"},{"id":-1068,"username":"Frostie Cub"},{"id":-1067,"username":"Fizzy Cub"},{"id":-1066,"username":"Chunkie Cub"},{"id":-1065,"username":"Frosty Cub"},{"id":-1064,"username":"Lava Cub"},{"id":-1063,"username":"Sparkle Cub"},{"id":-1062,"username":"Chunky Cub"},{"id":-1061,"username":"Cripsie Cub"},{"id":-1060,"username":"Brezie Cub"},{"id":-1059,"username":"Orange Cub"},{"id":-1058,"username":"Skippie Cub"},{"id":-1057,"username":"Sunny Cub"},{"id":-1056,"username":"Flip Cub"},{"id":-1055,"username":"Fizzie Cub"},{"id":-1054,"username":"Sily Cub"},{"id":-1053,"username":"Poof Cub"},{"id":-1052,"username":"Blue Cub"},{"id":-1051,"username":"Poofy Cub"},{"id":-1050,"username":"Happy Cub"},{"id":-1049,"username":"Chunky Bat"},{"id":-1048,"username":"Glitter Cub"},{"id":-1047,"username":"Frizzi Cub"},{"id":-1046,"username":"Zoomi Rat"},{"id":-1045,"username":"Poof Pelican"},{"id":-1044,"username":"Funny Swan"},{"id":-1043,"username":"Skippie Pelican"},{"id":-1042,"username":"Poofy Penguin"},{"id":-1041,"username":"Snuggle Bug"},{"id":-1040,"username":"Cotton Yak"},{"id":-1039,"username":"Frostie Yak"},{"id":-1038,"username":"Chunkie Swan"},{"id":-1037,"username":"Sunny Platapus"},{"id":-1036,"username":"Poofy Bear"},{"id":-1035,"username":"Happy Platapus"},{"id":-1034,"username":"Blippie Yak"},{"id":-1033,"username":"Cherri Goose"},{"id":-1032,"username":"Orange Moose"},{"id":-1031,"username":"Snuggle Cub"},{"id":-1030,"username":"Poof Goos"},{"id":-1029,"username":"Whirlie Yak"},{"id":-1028,"username":"Zoomie Cub"},{"id":-1027,"username":"Drifty Cub"},{"id":-1026,"username":"Fizzy Goos"},{"id":-1025,"username":"Brezie Dog"},{"id":-1024,"username":"Poofy Cobra"},{"id":-1023,"username":"Sunny Ant"},{"id":-1022,"username":"Squishy Bat"},{"id":-1021,"username":"Frosty Piggi"},{"id":-1020,"username":"Zoomie Mole"},{"id":-1019,"username":"Funny Yak"},{"id":-1018,"username":"Poofie Crab"},{"id":-1017,"username":"Drifty Cat"},{"id":-1016,"username":"Sparkle Bug"},{"id":-1015,"username":"Chunkie Snake"},{"id":-1014,"username":"Sparkly Yak"},{"id":-1013,"username":"Skippy Ant"},{"id":-1012,"username":"Frizzi Bat"},{"id":-1011,"username":"Poof Zebra"},{"id":-1010,"username":"Zoomi Goat"},{"id":-1009,"username":"Brezie Bug"},{"id":-1008,"username":"Curli Cub"},{"id":-1007,"username":"Chunky Fawn"},{"id":-1006,"username":"Melti Yak"},{"id":-1005,"username":"Chippi Cat"},{"id":-1004,"username":"Fizzie Yak"},{"id":-1003,"username":"Sunny Yak"},{"id":-1002,"username":"Flip Mous"},{"id":-1001,"username":"Brezie Swan"},{"id":-1000,"username":"Cloudie Cub"},{"id":-999,"username":"Sparkle Moose"},{"id":-998,"username":"Zoomie Fawn"},{"id":-997,"username":"Funny Whale"},{"id":-996,"username":"Poof Yak"},{"id":-995,"username":"Cherri Fawn"},{"id":-994,"username":"Skippie Rat"},{"id":-993,"username":"Whirlie Cub"},{"id":-992,"username":"Poofy Buny"},{"id":-991,"username":"Puffy Ferret"},{"id":-990,"username":"Plum Moose"},{"id":-989,"username":"Snuggle Ant"},{"id":-988,"username":"Happy Lynx"},{"id":-987,"username":"Orange Snake"},{"id":-986,"username":"Curly Penguin"},{"id":-985,"username":"Chippy Yak"},{"id":-984,"username":"Snuggle Pup"},{"id":-983,"username":"Sundae Bug"},{"id":-982,"username":"Melti Bug"},{"id":-981,"username":"Giggli Zebra"},{"id":-980,"username":"Cotton Eel"},{"id":-979,"username":"Sunny Duck"},{"id":-978,"username":"Puffy Moose"},{"id":-977,"username":"Sparkle Fox"},{"id":-976,"username":"Funny Moose"},{"id":-975,"username":"Snuggle Piggi"},{"id":-974,"username":"Pepper Platapus"},{"id":-973,"username":"Zoomie Squirel"},{"id":-972,"username":"Cloudy Pup"},{"id":-971,"username":"Flip Hors"},{"id":-970,"username":"Breezy Lynx"},{"id":-969,"username":"Drifty Buny"},{"id":-968,"username":"Magic Rabbit"},{"id":-967,"username":"Snappie Pelican"},{"id":-966,"username":"Blippie Cub"},{"id":-965,"username":"Fizzie Lamb"},{"id":-964,"username":"Poofy Wombatt"},{"id":-963,"username":"Blipp Yak"},{"id":-962,"username":"Poof Seal"},{"id":-961,"username":"Sunny Crab"},{"id":-960,"username":"Skippy Dog"},{"id":-959,"username":"Magic Yak"},{"id":-958,"username":"Chunky Ratt"},{"id":-957,"username":"Fanci Pelican"},{"id":-956,"username":"Cloudy Cheeta"},{"id":-955,"username":"Frizzy Ottr"},{"id":-954,"username":"Blue Wren"},{"id":-953,"username":"Zoomie Raven"},{"id":-952,"username":"Orang Tigger"},{"id":-951,"username":"Melti Bear"},{"id":-950,"username":"Flip Dog"},{"id":-949,"username":"Bouncy Cat"},{"id":-948,"username":"Plum Bear"},{"id":-947,"username":"Lava Platapus"},{"id":-946,"username":"Sunny Cat"},{"id":-945,"username":"Cripsie Platapus"},{"id":-944,"username":"Cherri Yak"},{"id":-943,"username":"Piza Ottr"},{"id":-942,"username":"Frostie Seal"},{"id":-941,"username":"Scootr Seal"},{"id":-940,"username":"Chunkie Cow"},{"id":-939,"username":"Speedi Pig"},{"id":-938,"username":"Curli Bug"},{"id":-937,"username":"Spotty Lynx"},{"id":-936,"username":"Lava Lynx"},{"id":-935,"username":"Squish Yak"},{"id":-934,"username":"Poof Buny"},{"id":-933,"username":"Chunky Lamb"},{"id":-932,"username":"Frizz Wolf"},{"id":-931,"username":"Cloudie Toad"},{"id":-930,"username":"Pickle Bate"},{"id":-929,"username":"Whirly Bug"},{"id":-928,"username":"Tiny Lien"},{"id":-927,"username":"Whizzie Cub"},{"id":-926,"username":"Poofy Yak"},{"id":-925,"username":"Blipp Hors"},{"id":-924,"username":"Curli Feret"},{"id":-923,"username":"Snuggle Giraff"},{"id":-922,"username":"Magic Seal"},{"id":-921,"username":"Flip Buny"},{"id":-920,"username":"Sundae Swan"},{"id":-919,"username":"Crispie Bunny"},{"id":-918,"username":"Orange Yak"},{"id":-917,"username":"Toffie Owl"},{"id":-916,"username":"Frizzy Buny"},{"id":-915,"username":"Giggli Dog"},{"id":-914,"username":"Sunny Lamb"},{"id":-913,"username":"Blippie Bat"},{"id":-912,"username":"Snappy Wolf"},{"id":-911,"username":"Cotton Hippo"},{"id":-910,"username":"Bouncy Spider"},{"id":-909,"username":"Breezy Rat"},{"id":-908,"username":"Snuggle Penguin"},{"id":-907,"username":"Driftie Dog"},{"id":-906,"username":"Funny Cub"},{"id":-905,"username":"Fizzie Cobra"},{"id":-904,"username":"Lava Goos"},{"id":-903,"username":"Snappy Cub"},{"id":-902,"username":"Cherri Bug"},{"id":-901,"username":"Cuddlie Ant"},{"id":-900,"username":"Choco Lynx"},{"id":-899,"username":"Triky Goose"},{"id":-898,"username":"Melti Turtle"},{"id":-897,"username":"Snuggl Zebra"},{"id":-896,"username":"Peppr Cat"},{"id":-895,"username":"Puffy Koala"},{"id":-894,"username":"Spotty Hippo"},{"id":-893,"username":"Sunny Dolphin"},{"id":-892,"username":"Glowi Mouse"},{"id":-891,"username":"Zoomie Swan"},{"id":-890,"username":"Cloudie Hors"},{"id":-889,"username":"Frosti Bug"},{"id":-888,"username":"Funny Eel"}],
-    'api.stumbleguys.com/abilities':                      {"ownedAbilities":[],"updatedUser":{"User":{"generatedAt":"2026-09-15T18:49:29.764153Z","id":945899407,"deviceId":"webgl_1927f74a24d57ee7111eec89973e6a72","stumbleId":"01M2K6909WVM8T5TCQ8G9TNVZ6","username":"Player QfQFVzuFyk","country":"IE","region":"EU","token":"IHmvPekptCql2uKJZ7q--j37yQJ3GaUf","version":"0.102","created":"2026-09-15T18:46:39.6671176","lastLogin":"2026-09-15T18:46:39.6671176Z","newsVersion":0,"skillRating":0,"experience":0,"crowns":0,"hiddenRating":0,"isBanned":false,"inventory":[{"userId":945899407,"itemId":803,"itemType":"DUPLICATE_BANK","item":"CONFIG_VERSION","amount":3}],"skins":["SKIN1","SKIN2"],"emotes":["emote_cry","emote_hi","emote_gg","emote_haha","emote_happy"],"animations":["animation1"],"footsteps":["footsteps_smoke"],"hasBattlePass":false,"passTokens":0,"freePassRewards":[],"premiumPassRewards":[],"balances":[{"amount":0,"name":"aec","secondsSince":0,"secondsPerUnit":0,"maxAmount":0,"lastGiven":"2026-09-15T18:49:29.7642033Z"},{"amount":0,"name":"aes","secondsSince":0,"secondsPerUnit":0,"maxAmount":0,"lastGiven":"2026-09-15T18:49:29.7642286Z"},{"amount":101,"name":"coins","secondsSince":0,"secondsPerUnit":0,"maxAmount":0,"lastGiven":"2026-09-15T18:46:39.6893708Z"},{"amount":16,"name":"default_free_ad_spins","secondsSince":0,"secondsPerUnit":0,"maxAmount":16,"lastGiven":"2026-09-14T18:46:39.6893708Z"},{"amount":1,"name":"default_free_spins","secondsSince":0,"secondsPerUnit":0,"maxAmount":1,"lastGiven":"2026-09-14T18:46:39.6893708Z"},{"amount":0,"name":"dust","secondsSince":0,"secondsPerUnit":0,"maxAmount":0,"lastGiven":"2026-09-15T18:49:29.7642408Z"},{"amount":0,"name":"dust_backup","secondsSince":0,"secondsPerUnit":0,"maxAmount":0,"lastGiven":"2026-09-15T18:49:29.7642433Z"},{"amount":0,"name":"dust_backup_second","secondsSince":0,"secondsPerUnit":0,"maxAmount":0,"lastGiven":"2026-09-15T18:49:29.7642465Z"},{"amount":0,"name":"end_of_match","secondsSince":0,"secondsPerUnit":0,"maxAmount":1,"lastGiven":"2026-09-15T18:49:29.7642492Z"},{"amount":0,"name":"end_of_match_event","secondsSince":0,"secondsPerUnit":0,"maxAmount":1,"lastGiven":"2026-09-15T18:49:29.7642537Z"},{"amount":0,"name":"gem_charge","secondsSince":0,"secondsPerUnit":0,"maxAmount":3,"lastGiven":"2026-09-15T18:49:29.7642572Z"},{"amount":1,"name":"gem_purchase","secondsSince":170,"secondsPerUnit":86400,"maxAmount":1,"lastGiven":"2026-09-15T18:46:39.6893708Z"},{"amount":5,"name":"gems","secondsSince":0,"secondsPerUnit":0,"maxAmount":0,"lastGiven":"2026-09-15T18:46:39.6893708Z"},{"amount":3,"name":"ranked_friend_boost","secondsSince":170,"secondsPerUnit":86400,"maxAmount":3,"lastGiven":"2026-09-15T18:46:39.6893708Z"},{"amount":0,"name":"remove_ads","secondsSince":0,"secondsPerUnit":0,"maxAmount":2,"lastGiven":"2026-09-15T18:49:29.7642746Z"},{"amount":0,"name":"remove_interstitial_ads","secondsSince":0,"secondsPerUnit":0,"maxAmount":2,"lastGiven":"2026-09-15T18:49:29.7642928Z"},{"amount":0,"name":"skin_charge","secondsSince":0,"secondsPerUnit":0,"maxAmount":5,"lastGiven":"2026-09-15T18:49:29.7642973Z"},{"amount":7,"name":"skin_purchase","secondsSince":170,"secondsPerUnit":86400,"maxAmount":7,"lastGiven":"2026-09-15T18:46:39.6893708Z"},{"amount":3,"name":"special_video","secondsSince":170,"secondsPerUnit":28800,"maxAmount":3,"lastGiven":"2026-09-15T18:46:39.6893708Z"},{"amount":0,"name":"stumble_coins","secondsSince":0,"secondsPerUnit":0,"maxAmount":0,"lastGiven":"2026-09-15T18:49:29.7643099Z"},{"amount":50,"name":"video","secondsSince":0,"secondsPerUnit":0,"maxAmount":5000,"lastGiven":"2026-09-15T18:46:39.6893708Z"},{"amount":8,"name":"video_coins","secondsSince":170,"secondsPerUnit":10800,"maxAmount":8,"lastGiven":"2026-09-15T18:46:39.6893708Z"},{"amount":5,"name":"video_coins_01","secondsSince":170,"secondsPerUnit":28800,"maxAmount":5,"lastGiven":"2026-09-15T18:46:39.6893708Z"},{"amount":5,"name":"video_coins_02","secondsSince":170,"secondsPerUnit":28800,"maxAmount":5,"lastGiven":"2026-09-15T18:46:39.6893708Z"},{"amount":10,"name":"video_gems","secondsSince":170,"secondsPerUnit":5400,"maxAmount":10,"lastGiven":"2026-09-15T18:46:39.6893708Z"},{"amount":0,"name":"tournament_ticket_event","secondsSince":0,"secondsPerUnit":0,"maxAmount":0,"lastGiven":"2026-09-15T18:49:29.7643352Z"},{"amount":0,"name":"tournament_ticket_legendary","secondsSince":0,"secondsPerUnit":0,"maxAmount":0,"lastGiven":"2026-09-15T18:49:29.7643383Z"},{"amount":0,"name":"tournament_ticket_rare","secondsSince":0,"secondsPerUnit":0,"maxAmount":0,"lastGiven":"2026-09-15T18:49:29.7643414Z"}],"Rewards":[],"availableNewsVersion":0,"latestNewsIdBackend":15367,"battlePass":{"freePassRewards":[],"premiumPassRewards":[],"passTokens":0,"hasPurchased":false,"hasPurchasedDeluxe":false,"passID":104,"secondsToEnd":1350630,"experience":0,"slotsClaimed":[],"hasUsedDiscount":false,"xpBooster":0,"coins":0,"hasUsedBonusDiscount":false,"passDateId":0},"secondsSinceCreated":170,"age":26,"kidFriendlyMode":2,"termsOfServiceVersion":1,"xpRoad":{"userId":945899407,"xpRoadId":0,"lastClaimedLevel":1,"isVeteran":true,"claimedRewardsIds":[],"hasBeenEnabled":true,"currentLevelCap":70,"isOnboarding":false,"onboardingFeaturesUnlocked":[]},"ftue":{"status":2,"step":0},"userFlags":{"hasUsedFreeNameChange":false,"hasCoinConversionPopupShown":true,"hasCoinConversionCompleted":true,"hasSecondCoinConversionPopupShown":true,"hasSecondCoinConversionCompleted":true,"hasActionEmotesToAbilitiesMigrationCompleted":true,"hasActionEmotesToAbilitiesMigrationPopupShown":true,"hasActionEmotesToAbilitiesSyncNeeded":false},"offerSequenceState":[{"sequenceId":"Rolling_Offer_Sep_NON_Tier3","lastInteractionTargetIndex":0,"lastInteractionDate":"2026-09-15T18:49:27.1457058Z","firstInteractionDate":"2026-09-15T18:49:27.1457058Z"}],"stumbleDrops":{"featureEnabled":false,"trophyStartCount":0,"trophiesEarned":0,"lastTrophyClaimCount":0,"seasonId":"LIVE_Season2_Control"},"hiddenShopSections":["Section_Abilities","Section_Brazil_Mitigation","Section_Catalog","Section_Catalog_Coins_Wheel","Section_Catalog_FIX"],"hiddenShopOffers":["09_07_2026_CommunityBrazil_gift","10_1_2026_AuroraCrag_sg_10x","10_1_2026_AuroraCrag_sg_14b","10_1_2026_AuroraCrag_sg_9b","10_1_2026_CarnivalsHorror_gem_offer","10_1_2026_Deathpack_gem_offer","10_1_2026_MrPig_gem_offer","10_1_2026_Quartz_gem_offer","10_15_2026_BriocheBelle_gem_offer","10_15_2026_CaptainCursedHeart_gem_offer","10_15_2026_CaveFlyer_gem_offer","10_15_2026_DarkFuture_gem_offer","10_22_2026_Firewing_gem_offer","10_22_2026_GrimsonRevenant_gem_offer","10_22_2026_JupiterJoelRecolor_gem_offer","10_22_2026_VoodooDoll_gem_offer","10_29_2026_Firestarter_gem_offer","10_29_2026_MechaSprinkles_gem_offer","10_29_2026_TucoMuerto_gem_offer","10_29_2026_WitchHouse_gem_offer","10_8_2026_CaptainNemo_gem_offer","10_8_2026_Chupacabra_gem_offer","10_8_2026_Glare_gem_offer","10_8_2026_PicklusSupreme_gem_offer","8_20_2026_67_sg_6f","8_20_2026_67Guy_sg_2h","8_20_2026_GoldenBones_sg_4b","8_20_2026_TidalWraith_sg_12f","8_20_2026_UglyDrawing_sg_18b","8_27_2026_Capricorn_gem_offer","8_27_2026_Luminara_gem_offer","8_27_2026_MutatedNeo_gem_offer","8_27_2026_Quartz_gem_offer","9_10_2026_CerealKiller_gem_offer","9_10_2026_DeanHellfire_gem_offer","9_10_2026_FireDjinni_gem_offer","9_10_2026_GaldeMayo_gem_offer","9_10_2026_GoldenAstronaut_gem_offer","9_10_2026_GoldenDragon_gem_offer","9_10_2026_Pyrosoul_gem_offer","9_10_2026_ShantyCthulhulu_gem_offer","9_10_2026_TheArchitect_gem_offer","9_10_2026_VolcanoGuy_gem_offer","9_17_2026_DiwaliGal_gem_offer","9_17_2026_Guaca_gem_offer","9_17_2026_PunkRock_gem_offer","9_17_2026_SenseiFirefist_gem_offer","9_24_2026_AcePride_gem_offer","9_24_2026_Capt_Goldheart_gem_offer","9_24_2026_LavaPhoenix_gem_offer","9_24_2026_ShadowMeow_gem_offer","9_3_2026_Anon_gem_offer","9_3_2026_CarnivalRecolor_gem_offer","9_3_2026_DuskDragon_gem_offer","9_3_2026_FireCrystalChicken_gem_offer","9_3_2026_GuardianofElDorado_gem_offer","9_3_2026_HeliumTony_gem_offer","9_3_2026_Kaiju-neko_gem_offer","9_3_2026_Kindlekin_gem_offer","9_3_2026_VenerableGell_gem_offer","9_7_2026_BrazilKing_sg_5be","Classic_Wheel","LavaLand_Deluxe_Bundle_Discounted_Extra","NewTest_Var1_Aud_1AD_sg_12b","NewTest_Var1_Aud_1AD_sg_9a","NewTest_Var1_Aud_1E_sg_12b","NewTest_Var1_Aud_1E_sg_9a","NewTest_Var1_Aud_1F_sg_12b","NewTest_Var1_Aud_1F_sg_9a","NewTest_Var1_Aud_1G_sg_10b","NewTest_Var1_Aud_1G_sg_14a","NewTest_Var1_Aud_1H_sg_18b","NewTest_Var1_Aud_1H_sg_22a","NewTest_Var1_Aud_2A_sg_6b","NewTest_Var1_Aud_2A_sg_8d","NewTest_Var1_Aud_2B_sg_12b","NewTest_Var1_Aud_2B_sg_9a","NewTest_Var1_Aud_3NP_sg_10c","NewTest_Var1_Aud_3NP_sg_15b","Rotation_Animations_Box_A3","Rotation_Emotes_Box_A1","Rotation_Emotes_Box_B1","Rotation_Footsteps_Box_A2"],"userProfile":{"userId":945899407,"userName":"Player QfQFVzuFyk","title":"","country":"IE","trophies":0,"crowns":0,"experience":0,"hiddenRating":0,"isOnline":true,"lastSeenDate":"2026-09-15T18:49:12","skin":"SKIN1","nativePlatformName":"webgl","ranked":{"currentSeasonId":"LIVE_RANKED_SEASON_25_cloned","currentRankId":0,"currentTierIndex":0},"flags":0}},"timestamp":"2026-09-15T18:49:29.7830628Z","termsOfServiceAccepted":true,"PhotonJwt":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5NDU4OTk0MDciLCJuYW1lIjoiUGxheWVyIFFmUUZWenVGeWsiLCJ0aXRsZSI6IiIsInBsYXRmb3JtIjoiV0VCIiwiYWN0aW9uLWVtb3RlcyI6IltdIiwiZXF1aXBwZWQtY29zbWV0aWNzIjp7IlVzZXJJZCI6Ijk0NTg5OTQwNyIsIlNraW4iOiJTS0lOMSIsIkNvbG9yIjoiQ09MT1IxIiwiQW5pbWF0aW9uIjoiYW5pbWF0aW9uMSIsIkZvb3RzdGVwcyI6ImZvb3RzdGVwc19zbW9rZSIsIkVtb3RlMSI6MiwiRW1vdGUyIjoxMCwiRW1vdGUzIjoxMiwiRW1vdGU0IjoxMSwiUG9kaXVtIjoiIiwiVHJhaXQiOiIifSwibmJmIjoxNzg5NDk4MTY5LCJleHAiOjE3ODk1ODQ1NjksImlhdCI6MTc4OTQ5ODE2OSwiaXNzIjoiY29tLnN0dW1ibGVndXlzLnVzZXIiLCJhdWQiOiJjb20uZXhpdGdhbWVzLnBob3RvbiJ9.msjIklmtvWnDVrq59Uurgk2Hj56-cZnMRvbUzyJMswY","equippedCosmetics":{"hero":"","stumblerRoadHero":"","skin":"SKIN1","color":"COLOR1","animation":"animation1","footsteps":"footsteps_smoke","emote1":"emote_cry","emote2":"emote_hi","emote3":"emote_gg","emote4":"emote_haha","podium":"","trait":""},"uidRequest":0,"missionsProgression":[]}},
-    'api.stumbleguys.com/ranked/me':                      {"currentSeasonId":"LIVE_RANKED_SEASON_25_cloned","currentSeasonLeaderboardId":"season_LIVE_RANKED_SEASON_25_cloned","currentRankPoints":0,"currentRankId":0,"currentTierIndex":0,"currentLeaderboardPosition":0,"highestRankIdClaimed":0,"highestTierIndexClaimed":0,"boostUntilRankId":0,"previousSeasonLeaderboardId":"season_LIVE_RANKED_SEASON_25","previousSeasonRankId":0,"previousSeasonTierIndex":0,"previousBoostUntilRankId":0,"hasSeasonChangeoverCeremonyPending":false,"hasRankCeremonyPending":false,"hasTierRewardsPending":false,"friendBoostChargesAvailable":3},
-    'api.stumbleguys.com/usersettings':                   {"friendIsOnlinePush":true,"invitedToPartyPush":true,"partyInviteToastNotification":true,"partyInviteInGameToastNotification":true},
-    'api.stumbleguys.com/playcount':                      {"playCounts":{"260910_Volcanobd_MS_BD_S_SXXPX_1_12":72176,"260910_Wackyrace_M_R_S_AXXXX_2_16":63086,"260914_Teamstumble_M_BD_T_AXXXX_2_12":352656,"260910_Bdmixup_N_BD_S_XXXXX_3_32":18319,"260913_Foodfight_N_E_S_XXQXX_1_16":15001,"260913_Slipnslide_N_R_T_ASQXX_3_32":24730,"260914_Ach_N_M_S_AXXXX_1_24":26347}},
-    'api.stumbleguys.com/social/interactions':            {"friends":[],"friendRequests":[],"partyInvites":[],"recommendedFriends":[{"tags":["SIMILAR_SKILL"],"userProfile":{"userId":945448987,"userName":"FRAN_*","title":"","country":"CO","trophies":90,"crowns":0,"experience":1400,"hiddenRating":0,"isOnline":true,"lastSeenDate":"2026-09-15T18:49:09","skin":"SKIN825","nativePlatformName":"android","ranked":{"currentSeasonId":"LIVE_RANKED_SEASON_25_cloned","currentRankId":0,"currentTierIndex":0},"flags":0}},{"tags":["SIMILAR_SKILL"],"userProfile":{"userId":911502946,"userName":"Player SovA0Qc7sC","title":"","country":"CL","trophies":30,"crowns":0,"experience":300,"hiddenRating":0,"isOnline":true,"lastSeenDate":"2026-09-15T18:49:09","skin":"SKIN825","nativePlatformName":"android","ranked":{"currentSeasonId":"LIVE_RANKED_SEASON_25_cloned","currentRankId":0,"currentTierIndex":0},"flags":0}},{"tags":["SIMILAR_SKILL"],"userProfile":{"userId":943832307,"userName":"Player 5czsuc3E6N","title":"","country":"CL","trophies":10,"crowns":0,"experience":200,"hiddenRating":0,"isOnline":true,"lastSeenDate":"2026-09-15T18:49:08","skin":"SKIN1","nativePlatformName":"android","ranked":{"currentSeasonId":"LIVE_RANKED_SEASON_25_cloned","currentRankId":0,"currentTierIndex":0},"flags":0}},{"tags":["SAME_COUNTRY"],"userProfile":{"userId":837517423,"userName":"OJCHAMP","title":"","country":"IE","trophies":16400,"crowns":209,"experience":396300,"hiddenRating":0,"isOnline":true,"lastSeenDate":"2026-09-15T18:49:07","skin":"SKIN1486","nativePlatformName":"android","ranked":{"currentSeasonId":"LIVE_RANKED_SEASON_25_cloned","currentRankId":1,"currentTierIndex":0},"flags":0,"clan":{"clanId":"01KAH0Y2G4AZXZYCAS5VEGZGYS","name":"oj master of st","tag":"67","logo":{"backgroundId":"option15","foregroundId":"option13","colourSchemeId":"option06","level":2},"memberCount":35,"memberCapacity":50,"joinPolicy":0,"region":"EU","language":"en","clanXP":9795}}},{"tags":["SAME_COUNTRY"],"userProfile":{"userId":895525643,"userName":"Adripro_767","title":"","country":"IE","trophies":425,"crowns":2,"experience":4350,"hiddenRating":0,"isOnline":false,"lastSeenDate":"2026-09-15T18:40:21","skin":"SKIN825","nativePlatformName":"android","ranked":{"currentSeasonId":"LIVE_RANKED_SEASON_25_cloned","currentRankId":0,"currentTierIndex":0},"flags":0}}]},
-    'api.stumbleguys.com/tournamentx/seasons':            [{"id":77,"isEnabled":false,"startTime":"2026-09-03T10:00:00","endTime":"2026-10-01T10:00:00","nameKey":"TOURNAMENTS","descriptionKey":"GENERIC_TOURNEY_DESC","awards":[{"xp":50,"awardId":1,"type":"CURRENCY","amount":15,"awardJson":{"name":"gems"}},{"xp":125,"awardId":2,"type":"CURRENCY","amount":1,"awardJson":{"name":"tournament_ticket_rare"}},{"xp":225,"awardId":3,"type":"EMOTE","amount":1,"awardJson":{"id":"Emote595_Freezing"}},{"xp":375,"awardId":4,"type":"CURRENCY","amount":20,"awardJson":{"name":"gems"}},{"xp":575,"awardId":5,"type":"CURRENCY","amount":1,"awardJson":{"name":"tournament_ticket_rare"}},{"xp":825,"awardId":6,"type":"ANIMATION","amount":1,"awardJson":{"id":"Victory049_TheMacarena"}},{"xp":1125,"awardId":7,"type":"CURRENCY","amount":1,"awardJson":{"name":"tournament_ticket_legendary"}},{"xp":1475,"awardId":8,"type":"FOOTSTEPS","amount":1,"awardJson":{"id":"Steps118"}},{"xp":1875,"awardId":9,"type":"CURRENCY","amount":25,"awardJson":{"name":"gems"}},{"xp":2325,"awardId":10,"type":"EMOTE","amount":1,"awardJson":{"id":"emote_taunt1"}},{"xp":2825,"awardId":11,"type":"CURRENCY","amount":30,"awardJson":{"name":"gems"}},{"xp":3375,"awardId":12,"type":"EMOTE","amount":1,"awardJson":{"id":"emote_taunt8"}},{"xp":3975,"awardId":13,"type":"CURRENCY","amount":35,"awardJson":{"name":"gems"}},{"xp":4675,"awardId":14,"type":"FOOTSTEPS","amount":1,"awardJson":{"id":"Steps284_Jewels"}},{"xp":5475,"awardId":15,"type":"ANIMATION","amount":1,"awardJson":{"id":"Victory108_Cheerleader"}},{"xp":6375,"awardId":16,"type":"CURRENCY","amount":40,"awardJson":{"name":"gems"}},{"xp":7375,"awardId":17,"type":"EMOTE","amount":1,"awardJson":{"id":"Emote096_Taunt_GoingSuper"}},{"xp":8475,"awardId":18,"type":"CURRENCY","amount":45,"awardJson":{"name":"gems"}},{"xp":9675,"awardId":19,"type":"SKIN","amount":1,"awardJson":{"id":"SKIN1572"}},{"xp":11275,"awardId":20,"type":"SKIN","amount":1,"awardJson":{"id":"SKIN1269"}}],"backgroundImageKey":"bg_test"}],
-    'api.stumbleguys.com/tournamentx/active/v2':          {"areAdditionalTournamentsVersionRestricted":false,"userActiveTournaments":[{"id":351,"type":1,"isEnabled":true,"minVersion":"0.102","startTime":"2026-09-03T10:00:00Z","endTime":"2026-10-01T10:00:00Z","nameKey":"ELIMINATION_CUP","descriptionKey":"Turbo_Event_Description_2_09092024","listItemBackgroundImage":"Acid_Pool_Background_Image_Tournaments_Card","detailsPanelBackgroundImage":"Acid_Pool_Background_Image_Tournaments","prizeBannerColour":"#E4E407","headerColour":"#E4E407","mapListGradientColourTop":"#E4E407","mapListGradientColourBottom":"#E4E407","listPriority":0,"minPlayers":16,"maxPlayers":16,"maxRounds":3,"minMatchmakingSeconds":20,"entryCurrencyType":"gems","entryCurrencyCost":10,"entryCurrencyType2":"tournament_ticket_rare","entryCurrencyCost2":1,"areEmotesRestricted":false,"prohibitedEmotes":[],"detailsPanelBorderColourTop":"#E4E407","detailsPanelBorderColourBottom":"#FF8300","colourData":{"detailsPanelMainColour":"#FC4EA0","detailsPanelBorderColour":"#FF00FB","headerGradientRight":"#FC4EA0","headerGradientLeft":"#FF8EFE","infoWidgetsGradientRight":"#8A05E3","infoWidgetsGradientLeft":"#6800D2","infoWidgetsBorderColour":"#FF00FB"},"rounds":[{"roundOrder":1,"maxPlayersToProgress":8,"minPlayersPerMatch":0,"maxPlayersPerMatch":0,"areLevelsRestricted":false,"permittedLevels":["level8_honey","level12_bomb","level15_laser","level19_block","level22_bot","level24_streamtiles","eventlevel1_dash","SSL_014_Sharktanic","L_042_Chicken","L_43_UFO3","L_049_AcidPool","IPL_068_Brawler","L_065_RushHourLegendary","L_051_Avalanche"]},{"roundOrder":2,"maxPlayersToProgress":4,"minPlayersPerMatch":0,"maxPlayersPerMatch":0,"areLevelsRestricted":false,"permittedLevels":["L_051_Avalanche","level8_honey","level12_bomb","level15_laser","level19_block","Level22_bot","level24_streamtiles","eventlevel1_dash","SSL_014_Sharktanic","L_042_Chicken","L_43_UFO3","L_049_AcidPool","IPL_068_Brawler","L_065_RushHourLegendary"]},{"roundOrder":3,"maxPlayersToProgress":1,"minPlayersPerMatch":0,"maxPlayersPerMatch":0,"areLevelsRestricted":false,"permittedLevels":["level8_honey","level12_bomb","level15_laser","level19_block","Level22_bot","level24_streamtiles","eventlevel1_dash","SSL_014_Sharktanic","L_042_Chicken","L_43_UFO3","L_049_AcidPool","IPL_068_Brawler","L_065_RushHourLegendary","L_051_Avalanche"]}],"awards":[{"placementRangeLowest":0,"placementRangeHighest":0,"awardId":1,"type":"XP","amount":200},{"placementRangeLowest":0,"placementRangeHighest":0,"awardId":2,"type":"TOURNAMENTXP","amount":25},{"placementRangeLowest":1,"placementRangeHighest":1,"awardId":4,"type":"XP","amount":250},{"placementRangeLowest":1,"placementRangeHighest":1,"awardId":6,"type":"TOURNAMENTXP","amount":40},{"placementRangeLowest":2,"placementRangeHighest":2,"awardId":9,"type":"XP","amount":300},{"placementRangeLowest":2,"placementRangeHighest":2,"awardId":11,"type":"TOURNAMENTXP","amount":70},{"placementRangeLowest":2,"placementRangeHighest":2,"awardId":12,"type":"CURRENCY","amount":10,"awardJson":{"name":"gems"}},{"placementRangeLowest":3,"placementRangeHighest":3,"awardId":14,"type":"XP","amount":500},{"placementRangeLowest":3,"placementRangeHighest":3,"awardId":16,"type":"TOURNAMENTXP","amount":100},{"placementRangeLowest":3,"placementRangeHighest":3,"awardId":17,"type":"CURRENCY","amount":25,"awardJson":{"name":"gems"}},{"placementRangeLowest":3,"placementRangeHighest":3,"awardId":18,"type":"CROWNS","amount":1}]},{"id":352,"type":1,"isEnabled":true,"minVersion":"0.102","startTime":"2026-09-03T10:00:00Z","endTime":"2026-09-17T10:00:00Z","nameKey":"ENDLESS_BLOCK_NAME","descriptionKey":"PREMIUM_BLOCK_DASH_TOURNEY_DESC","listItemBackgroundImage":"STPBlockDash_Background_Image_Tournaments_Card","detailsPanelBackgroundImage":"STPBlockDash_Background_Image_Tournaments","prizeBannerColour":"#E4E407","headerColour":"#E4E407","mapListGradientColourTop":"#E4E407","mapListGradientColourBottom":"#E4E407","listPriority":0,"minPlayers":8,"maxPlayers":8,"maxRounds":3,"minMatchmakingSeconds":20,"entryCurrencyType":"gems","entryCurrencyCost":20,"entryCurrencyType2":"tournament_ticket_legendary","entryCurrencyCost2":1,"areEmotesRestricted":false,"prohibitedEmotes":[],"detailsPanelBorderColourTop":"#E4E407","detailsPanelBorderColourBottom":"#FF8300","colourData":{"detailsPanelMainColour":"#FC4EA0","detailsPanelBorderColour":"#FF00FB","headerGradientRight":"#FC4EA0","headerGradientLeft":"#FF8EFE","infoWidgetsGradientRight":"#8A05E3","infoWidgetsGradientLeft":"#6800D2","infoWidgetsBorderColour":"#FF00FB"},"rounds":[{"roundOrder":1,"maxPlayersToProgress":6,"minPlayersPerMatch":0,"maxPlayersPerMatch":0,"areLevelsRestricted":false,"permittedLevels":["eventlevel8_block_endless"]},{"roundOrder":2,"maxPlayersToProgress":4,"minPlayersPerMatch":0,"maxPlayersPerMatch":0,"areLevelsRestricted":false,"permittedLevels":["eventlevel8_block_endless"]},{"roundOrder":3,"maxPlayersToProgress":1,"minPlayersPerMatch":0,"maxPlayersPerMatch":0,"areLevelsRestricted":false,"permittedLevels":["eventlevel8_block_endless"]}],"awards":[{"placementRangeLowest":0,"placementRangeHighest":0,"awardId":1,"type":"XP","amount":200},{"placementRangeLowest":0,"placementRangeHighest":0,"awardId":2,"type":"TOURNAMENTXP","amount":50},{"placementRangeLowest":1,"placementRangeHighest":1,"awardId":4,"type":"XP","amount":250},{"placementRangeLowest":1,"placementRangeHighest":1,"awardId":6,"type":"TOURNAMENTXP","amount":80},{"placementRangeLowest":2,"placementRangeHighest":2,"awardId":9,"type":"XP","amount":300},{"placementRangeLowest":2,"placementRangeHighest":2,"awardId":11,"type":"TOURNAMENTXP","amount":140},{"placementRangeLowest":2,"placementRangeHighest":2,"awardId":12,"type":"CURRENCY","amount":20,"awardJson":{"name":"gems"}},{"placementRangeLowest":3,"placementRangeHighest":3,"awardId":14,"type":"XP","amount":500},{"placementRangeLowest":3,"placementRangeHighest":3,"awardId":16,"type":"TOURNAMENTXP","amount":200},{"placementRangeLowest":3,"placementRangeHighest":3,"awardId":17,"type":"CURRENCY","amount":50,"awardJson":{"name":"gems"}},{"placementRangeLowest":3,"placementRangeHighest":3,"awardId":18,"type":"CROWNS","amount":1}]}]},
-    'api.stumbleguys.com/missions':                       {"missionsProgressionsUpdated":[],"missionsAutoClaimedData":[],"segmentedMissions":[],"milestonesAutoClaimedData":[],"missionsV2Enabled":true},
-    'api.stumbleguys.com/cosmetic-sources-config':        [],
-    'api.stumbleguys.com/user/creator-codes':             ,
-    'api.stumbleguys.com/friends/blocked-users':          {"blockedUserIds":[]},
-    'api.stumbleguys.com/discoverability/interactions':   {"thumbnailIds":[]},
-    'api.stumbleguys.com/collection-events/me':           {"collectionEvents":[]},
-    'api.stumbleguys.com/clans/me':                       {"userRequests":{}},
-    'api.stumbleguys.com/economy/offers/purchasedV2':     {},
+// ── 1. Datadog mock ─────────────────────────────────────────────────────────
+// Unity calls DD_LOGS.logger.* — must exist before Unity runs
+(function(){
+  var noop=function(){};
+  var logger={log:noop,info:noop,warn:noop,error:noop,debug:noop};
+  window.DD_LOGS={
+    logger:logger,init:noop,
+    addLoggerGlobalContext:noop,setLoggerGlobalContext:noop,
+    createLogger:function(){return logger;},
+    getLogger:function(){return logger;},
+    onReady:function(cb){try{cb();}catch(e){}}
   };
-
-  // Fake player profile for any /me or /user endpoint
-  var FAKE_ME = JSON.stringify({
-    id: 'guest-0001', username: 'Stumbler', avatar: '', level: 1,
-    coins: 9999, gems: 9999, crowns: 99, trophies: 0,
-    isGuest: true, locale: 'en', country: 'US'
-  });
-
-  var EMPTY_OK = JSON.stringify({});
-  var EMPTY_ARR = JSON.stringify([]);
-
-  function mockResponse(body) {
-    return new Response(body || EMPTY_OK, {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
-  }
-
-  function findMock(url) {
-    for (var key in MOCKS) {
-      if (url.indexOf(key) !== -1) return MOCKS[key];
-    }
-    // Generic fallbacks
-    if (url.indexOf('api.stumbleguys.com') !== -1) {
-      if (url.indexOf('/me') !== -1) return FAKE_ME;
-      if (url.indexOf('/user') !== -1) return FAKE_ME;
-      return EMPTY_OK;
-    }
-    if (url.indexOf('config.sdk.scopely.io') !== -1) return JSON.stringify({sdk_version:'4.0',features:{}});
-    if (url.indexOf('localization2.stumbleguys.com') !== -1) return '';
-    if (url.indexOf('static.aprod.scopely.io') !== -1) return EMPTY_OK;
-    if (url.indexOf('devs-api.poki.com') !== -1) return EMPTY_OK;
-    if (url.indexOf('hb.vntsm.com') !== -1) return EMPTY_OK;
-    if (url.indexOf('bat.bing.com') !== -1) return EMPTY_OK;
-    if (url.indexOf('payment-gateway') !== -1) return EMPTY_OK;
-    if (url.indexOf('helpshift.com') !== -1) return EMPTY_OK;
-    if (url.indexOf('api.poki.com') !== -1) return EMPTY_OK;
-    return null;
-  }
-
-  var _fetch = window.fetch;
-  window.fetch = function(input, init) {
-    var url = (typeof input === 'string') ? input : (input && input.url) || '';
-    var mock = findMock(url);
-    if (mock !== null) {
-      console.log('[Mock]', url.substring(0, 80));
-      return Promise.resolve(mockResponse(mock));
-    }
-    return _fetch.apply(this, arguments);
+  window.DD_RUM={
+    init:noop,addRumGlobalContext:noop,setRumGlobalContext:noop,
+    startView:noop,addAction:noop,addError:noop,
+    onReady:function(cb){try{cb();}catch(e){}}
   };
-
-  // Also intercept XMLHttpRequest for Unity's internal loaders
-  var _XHROpen = XMLHttpRequest.prototype.open;
-  var _XHRSend = XMLHttpRequest.prototype.send;
-  XMLHttpRequest.prototype.open = function(method, url) {
-    this._interceptUrl = url;
-    return _XHROpen.apply(this, arguments);
-  };
-  XMLHttpRequest.prototype.send = function(body) {
-    var url = this._interceptUrl || '';
-    var mock = findMock(url);
-    if (mock !== null && url.indexOf('/stumbleguys/cdn/') === -1) {
-      console.log('[XHR Mock]', url.substring(0, 80));
-      var self = this;
-      setTimeout(function() {
-        Object.defineProperty(self, 'status', { get: function() { return 200; } });
-        Object.defineProperty(self, 'readyState', { get: function() { return 4; } });
-        Object.defineProperty(self, 'responseText', { get: function() { return mock || '{}'; } });
-        Object.defineProperty(self, 'response', { get: function() { return mock || '{}'; } });
-        if (self.onreadystatechange) self.onreadystatechange();
-        if (self.onload) self.onload();
-      }, 50);
-      return;
-    }
-    return _XHRSend.apply(this, arguments);
-  };
-
-  console.log('[SG] API interceptor ready - ' + Object.keys(MOCKS).length + ' endpoints mocked');
 })();
 
-// ============================================================
-// 2. MOCK Venatus __VM ad system - instant reward
-// ============================================================
-(function() {
-  window.__VM = {
-    push: function(cb) {
-      setTimeout(function() {
-        var EVENTS = { RENDERED:'RENDERED', SLOT_VIDEO_AD_STARTED:'SLOT_VIDEO_AD_STARTED', SLOT_VIDEO_ALL_ADS_COMPLETE:'SLOT_VIDEO_ALL_ADS_COMPLETE', SLOT_VIDEO_AD_SKIPPED:'SLOT_VIDEO_AD_SKIPPED', SLOT_VIDEO_AD_ERROR:'SLOT_VIDEO_AD_ERROR' };
-        var handlers = {};
-        var placement = { anyName:'video_2', on:function(e,f){handlers[e]=f;}, off:function(e){delete handlers[e];} };
-        cb({ placements:[], removePlacement:function(){} }, {
-          Placement:{ PLACEMENT_EVENTS: EVENTS },
-          Config:{ get:function(){ return { activate:function(){ return { videoApi:function(placeCb) {
-            placeCb(placement);
-            setTimeout(function(){ if(handlers[EVENTS.SLOT_VIDEO_ALL_ADS_COMPLETE]) handlers[EVENTS.SLOT_VIDEO_ALL_ADS_COMPLETE](); }, 200);
-          }};}};}
-        });
-      }, 100);
-    }
+// ── 2. API interceptor (base64-encoded mocks — no escaping issues) ──────────
+(function(){
+  function d(b64){return atob(b64);}
+  var MOCKS={
+    'api.stumbleguys.com/bots':                         d(''),
+    'api.stumbleguys.com/abilities':                    d(''),
+    'api.stumbleguys.com/ranked/me':                    d(''),
+    'api.stumbleguys.com/usersettings':                 d(''),
+    'api.stumbleguys.com/playcount':                    d(''),
+    'api.stumbleguys.com/social/interactions':          d(''),
+    'api.stumbleguys.com/tournamentx/seasons':          d(''),
+    'api.stumbleguys.com/tournamentx/active/v2':        d(''),
+    'api.stumbleguys.com/missions':                     d(''),
+    'api.stumbleguys.com/cosmetic-sources-config':      d(''),
+    'api.stumbleguys.com/friends/blocked-users':        d(''),
+    'api.stumbleguys.com/discoverability/interactions': d(''),
+    'api.stumbleguys.com/collection-events/me':         d(''),
+    'api.stumbleguys.com/clans/me':                     d('')
   };
+  var FAKE_ME=JSON.stringify({id:'guest-0001',username:'Stumbler',avatar:'',level:1,coins:9999,gems:9999,crowns:99,trophies:0,isGuest:true,locale:'en',country:'US'});
+  var OK='{}';var ARR='[]';
+  function mock(body){return new Response(body||OK,{status:200,headers:{'Content-Type':'application/json','Access-Control-Allow-Origin':'*'}});}
+  function find(url){
+    for(var k in MOCKS){if(url.indexOf(k)!==-1)return MOCKS[k];}
+    if(url.indexOf('api.stumbleguys.com')!==-1){
+      if(url.indexOf('/me')!==-1||url.indexOf('/user')!==-1)return FAKE_ME;
+      return OK;
+    }
+    if(url.indexOf('config.sdk.scopely.io')!==-1)return JSON.stringify({sdk_version:'4.0',features:{}});
+    if(url.indexOf('static.aprod.scopely.io')!==-1)return OK;
+    if(url.indexOf('localization2.stumbleguys.com')!==-1)return '';
+    if(url.indexOf('devs-api.poki.com')!==-1)return OK;
+    if(url.indexOf('hb.vntsm.com')!==-1)return OK;
+    if(url.indexOf('bat.bing.com')!==-1)return OK;
+    if(url.indexOf('payment-gateway')!==-1)return OK;
+    if(url.indexOf('helpshift.com')!==-1)return OK;
+    if(url.indexOf('usercentrics.eu')!==-1)return OK;
+    if(url.indexOf('pusher.com')!==-1)return OK;
+    return null;
+  }
+  var _fetch=window.fetch;
+  window.fetch=function(input,init){
+    var url=(typeof input==='string')?input:(input&&input.url)||'';
+    var m=find(url);
+    if(m!==null){console.log('[Mock fetch]',url.substring(0,80));return Promise.resolve(mock(m));}
+    return _fetch.apply(this,arguments);
+  };
+  console.log('[SG] API interceptor ready');
+})();
 
-  // In-game rewarded ad bridge (multiple patterns)
-  window.showRewardedAd = window.ShowRewardedAd = function(cb) {
-    setTimeout(function() {
-      if (window.unityInstance) {
-        ['AdsManager','AdManager','AdsController'].forEach(function(obj) {
-          try { window.unityInstance.SendMessage(obj, 'OnRewardedAdComplete', '1'); } catch(e){}
-          try { window.unityInstance.SendMessage(obj, 'OnRewardedAdFinished', 'true'); } catch(e){}
+// ── 3. Venatus __VM mock — pre-game video ad completes instantly ─────────────
+(function(){
+  window.__VM={push:function(cb){setTimeout(function(){
+    var E={RENDERED:'RENDERED',SLOT_VIDEO_AD_STARTED:'SLOT_VIDEO_AD_STARTED',SLOT_VIDEO_ALL_ADS_COMPLETE:'SLOT_VIDEO_ALL_ADS_COMPLETE',SLOT_VIDEO_AD_SKIPPED:'SLOT_VIDEO_AD_SKIPPED',SLOT_VIDEO_AD_ERROR:'SLOT_VIDEO_AD_ERROR'};
+    var h={};var p={anyName:'video_2',on:function(e,f){h[e]=f;},off:function(e){delete h[e];}};
+    cb({placements:[],removePlacement:function(){}},{Placement:{PLACEMENT_EVENTS:E},Config:{get:function(){return{activate:function(){return{videoApi:function(placeCb){
+      placeCb(p);setTimeout(function(){if(h[E.SLOT_VIDEO_ALL_ADS_COMPLETE])h[E.SLOT_VIDEO_ALL_ADS_COMPLETE]();},200);
+    }};}};}});
+  },100);}};
+  // In-game rewarded ads — instant reward
+  window.showRewardedAd=window.ShowRewardedAd=function(cb){
+    setTimeout(function(){
+      if(window.unityInstance){
+        ['AdsManager','AdManager','AdsController'].forEach(function(o){
+          try{window.unityInstance.SendMessage(o,'OnRewardedAdComplete','1');}catch(e){}
+          try{window.unityInstance.SendMessage(o,'OnRewardedAdFinished','true');}catch(e){}
         });
       }
-      if (typeof cb === 'function') cb(true);
-    }, 300);
+      if(typeof cb==='function')cb(true);
+    },300);
   };
-  window.showAd = function(type, placement, cb) { setTimeout(function(){ if(typeof cb==='function') cb({success:true}); }, 300); };
-  window.adBreak = function(o) { if(o&&o.afterAd) setTimeout(o.afterAd, 200); };
-  window.adConfig = function(){};
-
-  console.log('[SG] Ad mocks ready - all ads grant instant rewards');
+  window.showAd=function(t,p,cb){setTimeout(function(){if(typeof cb==='function')cb({success:true});},300);};
+  window.adBreak=function(o){if(o&&o.afterAd)setTimeout(o.afterAd,200);};
+  window.adConfig=function(){};
+  console.log('[SG] Ad mocks ready — all ads grant instant rewards');
 })();
 </script>
 
 <script src="/stumbleguys/cdn/WebGL.loader.js"></script>
 <script>
-(function() {
-  var canvas = document.getElementById('unity-canvas');
-  var loading = document.getElementById('loading');
-  var fill = document.getElementById('progress-fill');
-  var text = document.getElementById('progress-text');
-  var errDiv = document.getElementById('error');
-  var fsBtn = document.getElementById('fullscreen-btn');
+(function(){
+  var canvas=document.getElementById('unity-canvas');
+  var loading=document.getElementById('loading');
+  var fill=document.getElementById('progress-fill');
+  var text=document.getElementById('progress-text');
+  var errDiv=document.getElementById('error-msg');
 
-  createUnityInstance(canvas, {
-    dataUrl:            '/stumbleguys/cdn/WebGL.data.unityweb',
-    frameworkUrl:       '/stumbleguys/cdn/WebGL.framework.js.unityweb',
-    codeUrl:            '/stumbleguys/cdn/WebGL.wasm.unityweb',
-    streamingAssetsUrl: '/stumbleguys/cdn/StreamingAssets',
-    companyName:        'Scopely',
-    productName:        'Stumble Guys',
-    productVersion:     '0.102',
-    showBanner: function(msg, type) {
-      if (type === 'error') { errDiv.textContent = msg; errDiv.style.display = 'block'; }
-      console.warn('[Unity]', msg);
-    }
-  }, function(progress) {
-    var pct = Math.round(progress * 100);
-    fill.style.width = pct + '%';
-    text.textContent = pct + ' %';
-  }).then(function(instance) {
-    window.unityInstance = instance;
-    loading.style.display = 'none';
-    fsBtn.style.display = 'block';
-    try { instance.SendMessage('ScopelyId', 'SetUnityInstanceAvailable'); } catch(e) {}
-    try { instance.SendMessage('PusherManager', 'SetUnityInstanceAvailable'); } catch(e) {}
+  createUnityInstance(canvas,{
+    dataUrl:'/stumbleguys/cdn/WebGL.data.unityweb',
+    frameworkUrl:'/stumbleguys/cdn/WebGL.framework.js.unityweb',
+    codeUrl:'/stumbleguys/cdn/WebGL.wasm.unityweb',
+    streamingAssetsUrl:'/stumbleguys/cdn/StreamingAssets',
+    companyName:'Scopely',productName:'Stumble Guys',productVersion:'0.102',
+    showBanner:function(msg,type){if(type==='error'){errDiv.textContent=msg;errDiv.style.display='block';}console.warn('[Unity]',msg);}
+  },function(p){
+    var pct=Math.round(p*100);
+    fill.style.width=pct+'%';text.textContent=pct+' %';
+  }).then(function(i){
+    window.unityInstance=i;
+    loading.style.display='none';
+    document.getElementById('fs-btn').style.display='block';
+    try{i.SendMessage('ScopelyId','SetUnityInstanceAvailable');}catch(e){}
+    try{i.SendMessage('PusherManager','SetUnityInstanceAvailable');}catch(e){}
     console.log('[SG] Unity loaded!');
-  }).catch(function(err) {
-    console.error('[Unity] Load failed:', err);
-    errDiv.textContent = 'Failed to load: ' + (err.message || err);
-    errDiv.style.display = 'block';
+  }).catch(function(err){
+    console.error('[Unity] Load failed:',err);
+    errDiv.textContent='Load failed: '+(err.message||err);
+    errDiv.style.display='block';
   });
 })();
 </script>
