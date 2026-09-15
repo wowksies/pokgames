@@ -83,15 +83,20 @@ console.log("[SG] DD_LOGS/DD_RUM mocked");
     "api.stumbleguys.com/collection-events/me": d("eyJjb2xsZWN0aW9uRXZlbnRzIjpbXX0="),
     "api.stumbleguys.com/clans/me": d("eyJ1c2VyUmVxdWVzdHMiOnt9fQ=="),
   };
+  // Generate a proper RFC 4122 UUID v4 (hex only — required for C# Guid.TryParse)
+  function _mkUUID() {
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
+      var r = Math.random()*16|0, v = c==="x" ? r : (r&0x3|0x8);
+      return v.toString(16);
+    });
+  }
   // Load/save guest account from localStorage for persistent progress
   var SAVE_KEY = "sg_guest_profile";
   var _saved = (function(){ try{ return JSON.parse(localStorage.getItem(SAVE_KEY)||"null"); }catch(e){ return null; }})();
-  var GUEST_ID = (_saved && _saved.player_id) || ("guest-" + Math.random().toString(36).slice(2,10));
+  var GUEST_UUID = (_saved && _saved.uuid) || _mkUUID();
   var GUEST_NAME = (_saved && _saved.name) || "Stumbler";
-  // UUID-format so Scopely UUID validators don't reject it
-  var GUEST_UUID = (_saved && _saved.uuid) || ("00000000-0000-4000-8000-" + GUEST_ID.replace("guest-","").padEnd(12,"0").slice(0,12));
-  try{ localStorage.setItem(SAVE_KEY, JSON.stringify({player_id:GUEST_ID,uuid:GUEST_UUID,name:GUEST_NAME,version:"2"})); }catch(e){}
-  var SIMPLE_TOKEN = "sg-tok-" + GUEST_ID + "-" + Date.now().toString(36);
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify({uuid:GUEST_UUID,name:GUEST_NAME,version:"3"})); }catch(e){}
+  var SIMPLE_TOKEN = "sg-tok-" + GUEST_UUID.replace(/-/g,"").slice(0,16) + "-" + Date.now().toString(36);
   var ME = JSON.stringify({id:GUEST_UUID,player_id:GUEST_UUID,username:GUEST_NAME,name:GUEST_NAME,avatar:"",level:1,coins:9999,gems:9999,crowns:99,trophies:0,isGuest:true,is_guest:true,locale:"en",country:"US",created_at:"2024-01-01T00:00:00Z",updated_at:"2024-01-01T00:00:00Z"});
   var SCOPELY_CONFIG = JSON.stringify({sdk_version:"4.0.0",version:"4.0.0",min_supported_version:"1.0.0",features:{},environment:"production",endpoints:{}});
   var SCOPELY_REGISTER = JSON.stringify({id:"guest-device-0001",token:"mock-collector-token",expires_in:86400});
@@ -101,10 +106,10 @@ console.log("[SG] DD_LOGS/DD_RUM mocked");
     player_id:GUEST_UUID, playerId:GUEST_UUID, account_id:GUEST_UUID, accountId:GUEST_UUID, id:GUEST_UUID,
     access_token:SIMPLE_TOKEN, accessToken:SIMPLE_TOKEN, token:SIMPLE_TOKEN,
     token_type:"Bearer", tokenType:"Bearer", expires_in:86400, expiresIn:86400,
-    refresh_token:"sg-refresh-"+GUEST_ID, refreshToken:"sg-refresh-"+GUEST_ID,
+    refresh_token:"sg-refresh-"+GUEST_UUID.slice(0,8), refreshToken:"sg-refresh-"+GUEST_UUID.slice(0,8),
     id_token:SIMPLE_TOKEN, idToken:SIMPLE_TOKEN, scope:"openid profile email offline_access",
-    session_token:"sg-session-"+GUEST_ID, sessionToken:"sg-session-"+GUEST_ID,
-    game_token:"sg-game-"+GUEST_ID, gameToken:"sg-game-"+GUEST_ID,
+    session_token:"sg-session-"+GUEST_UUID.slice(0,8), sessionToken:"sg-session-"+GUEST_UUID.slice(0,8),
+    game_token:"sg-game-"+GUEST_UUID.slice(0,8), gameToken:"sg-game-"+GUEST_UUID.slice(0,8),
     is_new_player:false, isNewPlayer:false,
     player:{id:GUEST_UUID,player_id:GUEST_UUID,name:GUEST_NAME,username:GUEST_NAME,avatar:"",level:1,is_guest:true,isGuest:true,created_at:"2024-01-01T00:00:00Z",updated_at:"2024-01-01T00:00:00Z"},
     user:{id:GUEST_UUID,player_id:GUEST_UUID,name:GUEST_NAME,username:GUEST_NAME,avatar:"",level:1,is_guest:true,isGuest:true}
@@ -112,7 +117,7 @@ console.log("[SG] DD_LOGS/DD_RUM mocked");
   _lf.data = {player_id:GUEST_UUID,access_token:SIMPLE_TOKEN,token:SIMPLE_TOKEN,token_type:"Bearer",expires_in:86400,is_new_player:false};
   _lf.result = {player_id:GUEST_UUID,access_token:SIMPLE_TOKEN,token:SIMPLE_TOKEN,token_type:"Bearer",expires_in:86400,is_new_player:false};
   var LOGIN_V2 = JSON.stringify(_lf);
-  console.log("[SG] LoginV2 body:", LOGIN_V2.substring(0,150));
+  console.log("[SG] LoginV2 uuid:", GUEST_UUID, "token:", SIMPLE_TOKEN.substring(0,30));
   // (LOGIN_V2 defined above)
   function find(url){
     for(var k in MOCKS){ if(url.indexOf(k)!==-1) return MOCKS[k]; }
@@ -140,58 +145,13 @@ console.log("[SG] DD_LOGS/DD_RUM mocked");
     if(url.indexOf("auth0.com")!==-1) return "{}";
     return null;
   }
-  // Raw DEFLATE compress — Unity uses C# DeflateStream (not GZipStream) to decompress
-  function _sgGzip(str) {
-    return new Promise(function(resolve, reject) {
-      try {
-        var enc = new TextEncoder();
-        var cs = new CompressionStream("deflate-raw");
-        var writer = cs.writable.getWriter();
-        writer.write(enc.encode(str));
-        writer.close();
-        var chunks = [];
-        var reader = cs.readable.getReader();
-        function pump() {
-          reader.read().then(function(r) {
-            if(r.done) {
-              var total = chunks.reduce(function(a,c){return a+c.length;},0);
-              var out = new Uint8Array(total);
-              var off = 0;
-              chunks.forEach(function(c){out.set(c,off);off+=c.length;});
-              resolve(out.buffer);
-            } else { chunks.push(r.value); pump(); }
-          }).catch(reject);
-        }
-        pump();
-      } catch(e) { reject(e); }
-    });
-  }
   var _fetch = window.fetch;
   window.fetch = function(input, init){
     var url = (typeof input==="string") ? input : ((input && input.url) || "");
     var m = find(url);
     if(m !== null){
-      var reqHdrs = (init && init.headers) || {};
-      var wantsGzip = false;
-      try {
-        if(typeof reqHdrs.get==="function") wantsGzip = reqHdrs.get("use_response_compression")==="true";
-        else wantsGzip = reqHdrs["use_response_compression"]==="true";
-      } catch(e){}
-      if(url.indexOf("login")!==-1 && url.indexOf("v2")!==-1){
-        console.log("[SG] login/v2 compression:", wantsGzip);
-      }
       console.log("[Mock]", url.substring(0,80));
-      var body = m||"{}";
-      if(wantsGzip) {
-        return _sgGzip(body).then(function(compressed) {
-          console.log("[SG] Returning gzip response, bytes:", compressed.byteLength);
-          return new Response(compressed, {status:200, headers:{"Content-Type":"application/json","Access-Control-Allow-Origin":"*"}});
-        }).catch(function(e) {
-          console.warn("[SG] gzip failed, plain fallback:", e);
-          return new Response(body, {status:200, headers:{"Content-Type":"application/json","Access-Control-Allow-Origin":"*"}});
-        });
-      }
-      return Promise.resolve(new Response(body, {status:200, headers:{"Content-Type":"application/json","Access-Control-Allow-Origin":"*"}}));
+      return Promise.resolve(new Response(m||"{}", {status:200, headers:{"Content-Type":"application/json","Access-Control-Allow-Origin":"*"}}));
     }
     // Route unhandled api.stumbleguys.com calls through our CORS proxy
     if(url.indexOf("api.stumbleguys.com")!==-1){
