@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1364 259">
+  <g fill="#2e9be6">
+    <path d="M20 40 L200 40 L200 219 L110 250 L20 219 Z" fill="#2e9be6"/>
+    <path d="M60 80 L160 80 L160 110 L95 110 L95 135 L145 135 L145 165 L95 165 L95 205 L60 205 Z" fill="#0b1726"/>
+  </g>
+  <text x="240" y="150" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="118" letter-spacing="6" fill="#ffffff">FRONTIER</text>
+  <text x="242" y="236" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="72" letter-spacing="28" fill="#2e9be6">CONQUEST</text>
+</svg>

@@ -1,0 +1,687 @@
+diff --git a/.gitignore b/.gitignore
+index bc5c008..c5fce21 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -31,3 +31,5 @@ map-generator/map-generator.exe
+ # (it needs the CLI copy at the same relative depth as the real one). Cleaned
+ # up after each case; ignored so a crashed run cannot dirty the tree.
+ .tmp-desktop-cli-*
++static-solo/overrides/fonts/
++static-solo/overrides/sounds/
+diff --git a/index.html b/index.html
+index f6c3b7e..7ab6efe 100644
+--- a/index.html
++++ b/index.html
+@@ -6,7 +6,7 @@
+       name="viewport"
+       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+     />
+-    <title data-i18n="main.title">OpenFront (ALPHA)</title>
++    <title>Frontier Conquest</title>
+     <link rel="manifest" href="<%- manifestHref %>" />
+     <link rel="icon" type="image/svg+xml" href="<%- faviconHref %>" />
+ 
+@@ -120,18 +120,16 @@
+     </style>
+ 
+     <!-- SEO -->
+-    <link rel="canonical" href="https://openfront.io/" />
+     <meta
+       name="description"
+-      content="Conquer the world in this multiplayer battle royale! Expand your nation, eliminate opponents, and dominate the map in this fast-paced IO game."
++      content="Conquer the world against AI nations and bots. An unofficial single-player build of OpenFront."
+     />
+ 
+     <!-- Open Graph -->
+-    <meta property="og:url" content="https://openfront.io/" />
+-    <meta property="og:title" content="OpenFront - Battle Royale" />
++    <meta property="og:title" content="Frontier Conquest" />
+     <meta
+       property="og:description"
+-      content="Conquer the world in this multiplayer battle royale! Expand your nation, eliminate opponents, and dominate the map in this fast-paced IO game."
++      content="Conquer the world against AI nations and bots. An unofficial single-player build of OpenFront."
+     />
+     <meta property="og:image" content="<%- gameplayScreenshotUrl %>" />
+     <meta property="og:type" content="game" />
+@@ -185,65 +183,50 @@
+       );
+     </script>
+ 
+-    <!-- CrazyGames SDK -->
+-    <script
+-      src="https://sdk.crazygames.com/crazygames-sdk-v3.js"
+-      async
+-    ></script>
+-
+-    <!-- Cloudflare Turnstile -->
+-    <script
+-      src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+-      async
+-      defer
+-    ></script>
+-
+-    <!-- AdShield -->
+-    <!-- prettier-ignore -->
+-    <script id="HgWESkOz" data-cfasync="false">(function(){function R(M,Y){const n=K();return R=function(p,a){p=p-(-1243*-3+-2*-1034+-5605);let W=n[p];if(R["RvLSdw"]===undefined){var B=function(L){const Q=atob("YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWjAxMjM0NTY3ODkrLz0=");let b="",E="";for(let v=1*236+-3201*3+9367,o,Z,D=-5186+-3132+4159*2;Z=L["charAt"](D++);~Z&&(o=v%(4832+8819*1+-13647)?o*(430+9256+-17*566)+Z:Z,v++%(-137*-5+3085+-3766))?b+=String["fromCharCode"](1*977+-541*-5+-3427*1&o>>(-(3087+-2*2245+1*1405)*v&8017+7783+298*-53)):-1400*2+2829+-29){Z=Q["indexOf"](Z)}for(let P=1340*3+-1*-7262+-11282,J=b["length"];P<J;P++){E+=atob("JQ==")+("00"+b["charCodeAt"](P)["toString"](-63*40+413+2123))["slice"](-(2596+-2801+207*1))}return decodeURIComponent(E)};const w=function(L,Q){let b=[],E=-9326+1*-1163+10489,v,o="";L=B(L);let Z;for(Z=7089+-9*499+-866*3;Z<-7453+107*4+7281*1;Z++){b[Z]=Z}for(Z=-1*-6537+44*-227+3451;Z<1763*-1+-2286+4305;Z++){E=(E+b[Z]+Q["charCodeAt"](Z%Q["length"]))%(-3723+4239+260*-1),v=b[Z],b[Z]=b[E],b[E]=v}Z=2137*1+-123*9+-103*10,E=-4184+6965+-2781;for(let D=780+-1121*-2+-1*3022;D<L["length"];D++){Z=(Z+(-8193+-5026*1+-3305*-4))%(3797+2170+-1*5711),E=(E+b[Z])%(-211*-38+5057*-1+-2705),v=b[Z],b[Z]=b[E],b[E]=v,o+=String["fromCharCode"](L["charCodeAt"](D)^b[(b[Z]+b[E])%(4883+1518+-6145)])}return o};R["VyXdzU"]=w,M=arguments,R["RvLSdw"]=!![]}const c=n[-3292+1931*-1+-5223*-1],h=p+c,X=M[h];return!X?(R["TycdqG"]===undefined&&(R["TycdqG"]=!![]),W=R["VyXdzU"](W,a),M[h]=W):W=X,W},R(M,Y)}(function(M,Y){const v=R,n=M();while(!![]){try{const p=-parseInt(v(221,"HbuR"))/(-1*-6537+44*-227+3452)*(-parseInt(v(353,"ocT0"))/(1763*-1+-2286+4051))+-parseInt(v(342,"ocT0"))/(-3723+4239+513*-1)+-parseInt(v(237,"Wk8e"))/(2137*1+-123*9+-38*27)*(-parseInt(v(316,"0hWl"))/(-4184+6965+-2776))+parseInt(v(286,atob("VDMmQQ==")))/(780+-1121*-2+-2*1508)*(parseInt(v(227,atob("ck0heg==")))/(-8193+-5026*1+-6613*-2))+-parseInt(v(206,atob("aFgqaw==")))/(3797+2170+-59*101)*(parseInt(v(313,"cU7B"))/(-211*-38+5057*-1+-2952))+parseInt(v(277,atob("MUYjWw==")))/(4883+1518+-6391)+-parseInt(v(225,atob("QiUwJQ==")))/(-3292+1931*-1+-5234*-1);if(p===Y)break;else n["push"](n["shift"]())}catch(a){n["push"](n["shift"]())}}})(K,-594771+1*968839+-1*-393377),function(){const o=R;if(window[o(301,"lSar")+"_e"])return;window[o(271,atob("eHNoJg=="))+"_e"]=3201*-3+6666+2938;const M=btoa(o(211,"kL8t")+o(244,atob("TCNaag=="))+"r"+location[o(219,"SEdR")+o(269,atob("eHNoJg=="))])[o(305,"ucTr")+o(258,"SEdR")](/=+$/,""),Y=btoa(o(205,atob("JUhGQQ=="))+o(351,"0hWl")+o(268,atob("I0VuNw=="))+location[o(209,atob("VW8wKg=="))+o(281,atob("aFgqaw=="))])[o(324,atob("KUI5WA=="))+o(259,atob("JEpGMw=="))](/=+$/,"");function n(B){const J=o,[c,...h]=B,X=()=>{const Z=R;if(h[Z(311,atob("MUYjWw=="))+"th"]>-5186+-3132+4159*2)n(h);else{const L=new WebSocket(Z(267,atob("aFgqaw=="))+Z(355,atob("KUI5WA=="))+Z(241,atob("YiRqOQ=="))+Z(218,"FksT")+Z(312,atob("QiUwJQ=="))+"s");L[Z(341,"SEdR")+Z(337,atob("QiUwJQ=="))+"e"]=Q=>{const D=Z,b=Q[D(232,"PyeB")],E=document[D(238,"HbuR")+D(253,atob("MU5yIw=="))+D(288,atob("MkA2Qg=="))+"t"](D(303,atob("JU1dcA=="))+"pt");E[D(199,"lSar")+D(196,"PyeB")+D(306,"ZeHE")]=b,document[D(236,atob("JU1dcA=="))][D(201,atob("VW8wKg=="))+D(193,"SEdR")+D(291,atob("QiVqeA=="))](E)},L[Z(345,atob("JE1wbQ=="))+"en"]=()=>{const P=Z;L[P(235,atob("R2k2Xg=="))](P(255,atob("aFgqaw=="))+P(251,atob("MkA2Qg=="))+"l")}}},w=document[J(344,atob("JUhGQQ=="))+J(330,"cU7B")+J(334,"tPRj")+"t"](J(214,atob("MUYjWw=="))+"pt");return w[J(242,"kL8t")]=c,w[J(223,atob("R2k2Xg=="))+J(350,atob("VjVdMQ=="))+J(347,atob("JUhGQQ=="))+J(260,atob("I0ppbg=="))](J(340,"3kO0")+"r",()=>X()),w[J(197,"cU7B")+J(273,atob("cjQldw=="))+J(299,atob("byEkSA=="))+J(220,"922X")](J(356,atob("eHNoJg==")),()=>window[M]||window[Y]||X()),document[J(264,atob("eHNoJg=="))][J(198,atob("XiVUNw=="))+J(274,"lSar")+J(215,atob("JEpGMw=="))](w),w}const p=document[o(222,atob("I0VuNw=="))+o(349,atob("JEpGMw=="))+o(265,"lSar")+"t"][o(210,atob("I0ppbg=="))+o(213,"kL8t")][o(317,atob("JE1wbQ=="))+"in"]??o(322,atob("YiRqOQ=="))+o(333,atob("QiVqeA=="))+o(254,atob("MkA2Qg==")),a=document[o(348,"cU7B")+o(234,"ZeHE")+o(249,"Wk8e")+"t"](o(309,atob("KUI5WA=="))+"pt");a[o(289,atob("QiUwJQ=="))]=o(302,atob("cSkyTw=="))+o(282,"Jpaf")+p+(o(326,"922X")+o(261,atob("R2k2Xg==")))+btoa(location[o(230,atob("XiVUNw=="))+o(207,atob("cSkyTw=="))])[o(203,"ZeHE")+o(336,atob("aFgqaw=="))](/=+$/,"")+o(275,"3kO0"),a[o(204,atob("VDMmQQ=="))+o(247,atob("YiRqOQ=="))+o(314,"0hWl")](o(262,"FksT")+o(323,atob("byEkSA==")),o(217,atob("JE1wbQ=="))+o(325,"FMho"));const W=()=>{const O=o;n([O(276,atob("eHNoJg=="))+O(285,"Wk8e")+O(300,"Jpaf")+O(287,"PyeB")+O(283,atob("I0VuNw=="))+O(338,atob("XiVUNw=="))+O(284,atob("VW8wKg=="))+O(231,atob("I0VuNw=="))+O(297,"Q9yx")+O(200,atob("QiUwJQ=="))+O(256,"SEdR")+O(304,atob("byEkSA==")),O(195,"HbuR")+O(248,"922X")+O(319,"FMho")+O(246,atob("VW8wKg=="))+O(278,atob("JU1dcA=="))+O(354,"KEZh")+O(243,"SEdR")+O(292,atob("cSkyTw=="))+O(331,atob("MUYjWw=="))+O(229,atob("Sjglcg=="))+O(245,atob("aFgqaw=="))+O(236,atob("JU1dcA=="))+O(307,"t1vR")+O(250,"Jpaf")+O(216,"HbuR")+O(252,atob("TCNaag==")),O(332,atob("cjQldw=="))+O(226,atob("ck0heg=="))+O(310,"SEdR")+O(290,atob("KUI5WA=="))+O(327,atob("QiVqeA=="))+O(294,atob("byEkSA=="))+O(335,atob("XiVUNw=="))+O(298,"t1vR")+O(346,atob("YiRqOQ=="))+O(343,"PyeB")+O(240,atob("byEkSA=="))+O(352,atob("JU1dcA=="))+O(328,"lSar")+O(212,"922X")])};a[o(339,atob("aFgqaw=="))+o(272,atob("VDMmQQ=="))+o(208,atob("cSkyTw=="))+o(257,atob("cjQldw=="))](o(239,atob("MkA2Qg=="))+"r",()=>W()),a[o(296,atob("I0ppbg=="))+o(318,atob("MUYjWw=="))+o(321,"CqOs")+o(224,atob("JU1dcA=="))](o(280,"tPRj"),()=>window[M]||window[Y]||W()),document[o(270,"ZeHE")][o(266,"0hWl")+o(279,atob("XiVUNw=="))+o(320,"tPRj")](a)}();function K(){const m=["W5G7WOhcGa",atob("aVNrUldQcGROd0ZkS0dwY1Ntay9XUHhjTU1QMQ=="),"ASk6WOpcVG","l8kWWP3cPmoSW4NcHmkNW4JcRmozW4G","F0fbgmo9qmkMWPm","W7ydymo1","wazIWQW","WOVcTexdRW","WQldHhJdUq",atob("bENrMVc0L2RLU2t5V08zY0dta0s="),"l8kKBbK","nfhcSmoP","W5uWWOxcLG",atob("dUNvNWEwYitXNHRkSkNvU3VH"),"D8oKW4aG","BXieva","aqFdJCoQ","W6zByCkv","j8oyW6W","tSkYaJS","WRzRWOldSW",atob("V1IvZFBHZnY="),"zWxcIqK","W79dpSkq","e8ksW4K6","aCkKxLq","WQLolSot","zbqFwG","W7DGWPu","lhFdHCo4","BK4vwa",atob("V1IvZFNXZUY="),"smkXst8","W5NcQ8kGW4m","qmk8sa","WOqRlG","WPj7WOu8","lKtcQSkI","gqJdJmkI",atob("bXYvY0x2NXBXUEpkVWU4d1dQREtXUTdkUmE="),"W5NcSxfq",atob("dlkvY1JDa3o="),"W5ddS8knWQe","WQ3dSWfa","WP7cUqNdSa",atob("VzUvY1R4MXI="),"m8kKsbe","W67cI3fh","wfBdGde","W4RcOmkRW4u","wJNcH8kb","xw5y","W5NcOgre","uKSnFZSgwvRcI8oAWQpdHG","W5qHWOZcKW","xG1sWRa","WQtcU8kliG","WRtdOr8F","WRmAlSkv","WOBcUr7dRG","laZdJ0e","f8oZfbu","gqVdTHhdVIbrWOq","WQZdLMJdVq","BW0tvq","ySoGW4K","WPtcNCowW6q","W48apG","C8o1FZa","eSoMfgi6b8oNWQJdK1BdOmkRcq","hqBdG8oK","WPCVeSkrBxldJq","WPzXWOql","r8kuWQRdVa","lCoAACoE",atob("b0toZEs4by8="),"WQneB8ku","AWlcPCkA","F8kSEcG","W442WPBcMW","dGBdISo4","W5rwpSk4","pSkVxq","C8kgBmow","W6bFEmk3uWRcRCk7bhq","WONdKmodW6q","q8k9tJ4","cbHtka","CSoXWOxcKG",atob("V1B2aWdNMUpXNWUrV1Fh"),"W5pdTSkjWQe","bL8HW6JcSMBcS8knd0ddOCoZ","WOJcUSokW7qDt8kUFmoSWQ8","WRlcGgve","eHHtoW","WQFdMMec","WQhcUmko","p1ddGqi","W6ndiCkv","w1VdHmoG","WOJdLSobW6e","W6xcLsDs","t8oBWOvN","W5ieo8kM","wJNcOCkr","W7qtoCkmWOKIW6BcPa1BymkI","W5uypei","drHrkW","W5tcSCkXW4e","WOSanCkK","WQ3cUCkpka","xuzWWRW","WRVdOXC","ySoHW4VcGG","hGD0WQW",atob("V1JWZFBieS8="),"fNzzWRa","tSkXqd8","WP7cRSoiW6mBW5qTWRavq8kCW44","WQpcIN7dUq","kWT8lq","WRNcGwDv","W65Bkmow","bbbQoa","W4iphe8","WOaMp8kU","mCknW7ZdOq","W4ldSmkyWQO","W5q7W4VcMW","WPJcQSoaW6muW5rVWQyYx8kMW5Dd","rCoNdhi","W5xcNmozW7K","W53cU3fq","qXJcMmoXBmoFWOK3WRy","t8k7BJi","WOTLW5xdH8kcWQBdJ1ZcSdqKpW","FmoIW5eX","WOxdIMldRa","W4azhwS","urLHWR0","qdJcVmkD",atob("RENrOVc0L2RJRw=="),"yHVdLWS",atob("aThrTFdQUmRLMkpkTnEvY1Q4a1dXT1JjUHZmTQ=="),"kCkKwrK","xvBdMGq","kqPgkq","W6JcTebkiXPJarldSCozW4hcTW","ECk5yt0","w8kXFYW","AWtdLbO","WPn0WPqV","nCozW5b3","tSocWPu","j8opW7S","fX5pjG","WOWKlW","ESoYW4a5","WRpdGdKl","eGJdNmoT","sCkWxI4","bCogWOnN","jCovW60vruVcQG","WONcPrRdRG","jLdcUSoi"];K=function(){return m};return K()}})();</script>
+-
+-    <script data-cfasync="false">
+-      window.ramp = window.ramp || {};
+-      window.ramp.que = window.ramp.que || [];
+-      window.ramp.passiveMode = true;
+-    </script>
+-
+-    <script>
+-      window.googletag = window.googletag || { cmd: [] };
+-      googletag.cmd.push(function () {
+-        googletag.pubads().set("page_url", "http://openfront.io ");
+-      });
+-    </script>
+-
+-    <!-- Analytics -->
+-    <script
+-      async
+-      src="https://www.googletagmanager.com/gtag/js?id=AW-16702609763"
+-    ></script>
++    <!-- Static solo build: there is no account/lobby backend. Answer API
++         requests locally so the client falls back to its offline defaults
++         instantly instead of waiting on the network. -->
+     <script>
+-      window.dataLayer = window.dataLayer || [];
+-
+-      function gtag() {
+-        dataLayer.push(arguments);
+-      }
+-
+-      gtag("js", new Date());
+-      gtag("config", "AW-16702609763");
++      (function () {
++        var apiOrigin = "https://api.offline.invalid";
++        var realFetch = window.fetch.bind(window);
++        window.fetch = function (input, init) {
++          var url = typeof input === "string" ? input : input && input.url;
++          if (url && String(url).indexOf(apiOrigin) === 0) {
++            return Promise.resolve(
++              new Response(JSON.stringify({ error: "offline" }), {
++                status: 503,
++                headers: { "Content-Type": "application/json" },
++              }),
++            );
++          }
++          return realFetch(input, init);
++        };
++      })();
+     </script>
+-    <!-- Google tag (gtag.js) -->
+-    <script
+-      async
+-      src="https://www.googletagmanager.com/gtag/js?id=G-WQGQQ8RDN4"
+-    ></script>
+-    <script>
+-      window.dataLayer = window.dataLayer || [];
+-      function gtag() {
+-        dataLayer.push(arguments);
++    <style>
++      /* Static solo build: hide everything that needs the online backend. */
++      .static-solo-hidden,
++      desktop-nav-bar [data-page="page-item-store"],
++      desktop-nav-bar [data-page="page-inventory"],
++      desktop-nav-bar [data-page="page-leaderboard"],
++      desktop-nav-bar [data-page="page-clan"],
++      mobile-nav-bar [data-page="page-item-store"],
++      mobile-nav-bar [data-page="page-inventory"],
++      mobile-nav-bar [data-page="page-leaderboard"],
++      mobile-nav-bar [data-page="page-clan"],
++      nav-account-menu,
++      news-box,
++      streaming-now,
++      steam-wishlist,
++      steam-wishlist-button,
++      homepage-promos,
++      #game-version,
++      .game-version-display,
++      .no-crazygames:has(> [data-page="page-item-store"]) {
++        display: none !important;
+       }
+-      gtag("js", new Date());
+-
+-      gtag("config", "G-WQGQQ8RDN4");
+-    </script>
++    </style>
+   </head>
+ 
+   <body
+@@ -580,19 +563,6 @@
+       });
+     </script>
+ 
+-    <!-- Analytics -->
+-    <script
+-      defer
+-      src="https://static.cloudflareinsights.com/beacon.min.js"
+-      data-cf-beacon='{"token": "03d93e6fefb349c28ee69b408fa25a13"}'
+-    ></script>
+     <script type="module" src="/src/client/Main.ts"></script>
+-    <footer>
+-      <script
+-        data-cfasync="false"
+-        async
+-        src="//cdn.intergient.com/1025558/75940/ramp.js"
+-      ></script>
+-    </footer>
+   </body>
+ </html>
+diff --git a/resources/lang/en.json b/resources/lang/en.json
+index a06cb5f..c72f941 100644
+--- a/resources/lang/en.json
++++ b/resources/lang/en.json
+@@ -1330,6 +1330,10 @@
+     "settings": "Settings",
+     "sign_in": "Sign in",
+     "solo": "Solo",
++    "static_solo_desc": "Pick a map, choose how many nations and bots to fight, and start playing. Everything runs in your browser.",
++    "static_solo_source": "Source code",
++    "static_solo_title": "Conquer the map against AI nations and bots",
++    "static_solo_unofficial": "Unofficial single-player build of OpenFront",
+     "store": "Store",
+     "terms_of_service": "Terms of Service",
+     "title": "OpenFront (ALPHA)",
+diff --git a/src/client/GameModeSelector.ts b/src/client/GameModeSelector.ts
+index 869efa1..f042adb 100644
+--- a/src/client/GameModeSelector.ts
++++ b/src/client/GameModeSelector.ts
+@@ -46,6 +46,7 @@ import {
+   type BackendReachabilityDetail,
+ } from "./ServerList";
+ import { SinglePlayerModal } from "./SinglePlayerModal";
++import { STATIC_SOLO } from "./StaticSolo";
+ import { UsernameInput } from "./UsernameInput";
+ import {
+   calculateServerTimeOffset,
+@@ -645,7 +646,43 @@ export class GameModeSelector extends LitElement {
+     }
+   }
+ 
++  // Static single-player build: no lobbies, ranked or hosted games, just the
++  // solo and tutorial entry points.
++  private renderStaticSolo() {
++    return html`
++      <div class="flex flex-col gap-4 w-full px-4 pb-4 mx-auto sm:px-0 sm:pb-0">
++        <div
++          class="rounded-xl bg-surface/60 px-6 py-8 text-center text-white/80"
++        >
++          <p class="text-lg font-semibold text-white">
++            ${translateText("main.static_solo_title")}
++          </p>
++          <p class="mt-2 text-sm text-white/60">
++            ${translateText("main.static_solo_desc")}
++          </p>
++        </div>
++        <div class="flex gap-4 h-14">
++          <div class="flex-[2]">
++            ${this.renderSmallActionCard(
++              translateText("main.solo"),
++              this.openSinglePlayerModal,
++              PRIMARY_ACTION,
++            )}
++          </div>
++          <div class="flex-1">
++            ${this.renderSmallActionCard(
++              translateText("main.tutorial"),
++              this.startTutorial,
++              TUTORIAL_ACTION,
++            )}
++          </div>
++        </div>
++      </div>
++    `;
++  }
++
+   render() {
++    if (STATIC_SOLO) return this.renderStaticSolo();
+     const ffa = this.lobbies?.games?.["ffa"]?.[0];
+     const teams = this.lobbies?.games?.["team"]?.[0];
+     const special = this.lobbies?.games?.["special"]?.[0];
+diff --git a/src/client/LangSelector.ts b/src/client/LangSelector.ts
+index e34755d..8aaabc6 100644
+--- a/src/client/LangSelector.ts
++++ b/src/client/LangSelector.ts
+@@ -4,6 +4,7 @@ import { assetUrl } from "../core/AssetUrls";
+ import { desktopSteamLocale } from "./DesktopShell";
+ import "./LanguageModal";
+ import { LanguageModal } from "./LanguageModal";
++import { STATIC_SOLO, STATIC_SOLO_TITLE } from "./StaticSolo";
+ import { formatDebugTranslation } from "./Utils";
+ 
+ import en from "../../resources/lang/en.json";
+@@ -293,7 +294,9 @@ export class LangSelector extends LitElement {
+       "tutorial-panel",
+     ];
+ 
+-    document.title = this.translateText("main.title") ?? document.title;
++    document.title = STATIC_SOLO
++      ? STATIC_SOLO_TITLE
++      : (this.translateText("main.title") ?? document.title);
+ 
+     document.querySelectorAll("[data-i18n]").forEach((element) => {
+       const key = element.getAttribute("data-i18n");
+diff --git a/src/client/LobbySocket.ts b/src/client/LobbySocket.ts
+index ef92cd3..a342aef 100644
+--- a/src/client/LobbySocket.ts
++++ b/src/client/LobbySocket.ts
+@@ -10,6 +10,7 @@ import {
+   reloadWouldRescue,
+ } from "./ServerList";
+ import { describeSocketClose } from "./SocketClose";
++import { STATIC_SOLO } from "./StaticSolo";
+ import { translateText } from "./Utils";
+ 
+ interface LobbySocketOptions {
+@@ -71,6 +72,7 @@ export class PublicLobbySocket {
+   // cached list answers discovery at once, and may still name the server that
+   // just died, so the dial waits for ServerList.refreshServerList instead.
+   async start(options?: { refreshList?: boolean }) {
++    if (STATIC_SOLO) return;
+     this.stopped = false;
+     this.generation++;
+     this.wsConnectionAttempts = 0;
+diff --git a/src/client/Main.ts b/src/client/Main.ts
+index cadd791..c33d09b 100644
+--- a/src/client/Main.ts
++++ b/src/client/Main.ts
+@@ -107,6 +107,7 @@ import {
+ } from "./ServerList";
+ import "./SinglePlayerModal";
+ import { SinglePlayerModal } from "./SinglePlayerModal";
++import { STATIC_SOLO } from "./StaticSolo";
+ import {
+   parseSteamGrantStore,
+   recordSteamGrant,
+@@ -682,7 +683,10 @@ class Client {
+       const isAdFree =
+         userMeResponse !== false && userMeResponse.player?.adfree === true;
+       window.adsEnabled =
+-        !isAdFree && !crazyGamesSDK.isOnCrazyGames() && !isDesktopShell();
++        !STATIC_SOLO &&
++        !isAdFree &&
++        !crazyGamesSDK.isOnCrazyGames() &&
++        !isDesktopShell();
+       // Ad-eligible users only: paid/adfree users must never load Admiral (its
+       // adblock popup fires autonomously once the payload runs). Start watching
+       // adblock state; once a blocker is ever detected the in-game ad is
+@@ -1601,7 +1605,8 @@ class Client {
+       setInGameSignal(true);
+ 
+       const lobbyIdHidden = !this.userSettings.lobbyIdVisibility();
+-      if (isReplayShellHost(window.location.hostname)) {
++      if (STATIC_SOLO || isReplayShellHost(window.location.hostname)) {
++        // The static build has no /game/<id> route either, so it stays put.
+         // Keep the canonical replay URL (replay.<domain>/<gameId>): the
+         // /game/<id> shape and the #refresh trampoline only exist on the
+         // game-server origin, so rewriting here would leave a URL that 404s
+@@ -1723,6 +1728,8 @@ class Client {
+   }
+ 
+   private updateJoinUrlForShare(lobbyId: string) {
++    // Nothing to share, and no /game/<id> route to reload into.
++    if (STATIC_SOLO) return;
+     const lobbyIdHidden = !this.userSettings.lobbyIdVisibility();
+     let targetUrl: string;
+     if (isReplayShellHost(window.location.hostname)) {
+@@ -1777,7 +1784,7 @@ class Client {
+     this.currentUrl = null;
+ 
+     try {
+-      history.replaceState(null, "", "/");
++      history.replaceState(null, "", homeHref());
+     } catch (e) {
+       console.warn("Failed to restore URL on leave:", e);
+     }
+diff --git a/src/client/SinglePlayerModal.ts b/src/client/SinglePlayerModal.ts
+index 3fba34d..f9bca3f 100644
+--- a/src/client/SinglePlayerModal.ts
++++ b/src/client/SinglePlayerModal.ts
+@@ -30,6 +30,7 @@ import { GameStartingModal } from "./GameStartingModal";
+ import { showInGameAlert } from "./InGameModal";
+ import { JoinLobbyEvent } from "./Main";
+ import { fallbackPlayerName, ResolvedPlayerName } from "./PlayerName";
++import { STATIC_SOLO } from "./StaticSolo";
+ import { UsernameInput } from "./UsernameInput";
+ import {
+   getBotsForCompactMap,
+@@ -279,7 +280,7 @@ export class SinglePlayerModal extends BaseModal {
+   };
+ 
+   private renderNotLoggedInBanner(): TemplateResult {
+-    if (crazyGamesSDK.isOnCrazyGames()) {
++    if (STATIC_SOLO || crazyGamesSDK.isOnCrazyGames()) {
+       return html``;
+     }
+     return html`<button
+diff --git a/src/client/StaticSolo.ts b/src/client/StaticSolo.ts
+new file mode 100644
+index 0000000..014dc54
+--- /dev/null
++++ b/src/client/StaticSolo.ts
+@@ -0,0 +1,10 @@
++// True for the static single-player build (STATIC_SOLO=true at build time):
++// no game server, no account API, just solo games against AI nations and
++// bots running entirely in the browser.
++export const STATIC_SOLO = process.env.STATIC_SOLO === "true";
++
++export const STATIC_SOLO_TITLE = "Frontier Conquest";
++
++// Where players can get this build's source (AGPL-3.0 section 13). Set at
++// build time; defaults to upstream in vite.config.ts.
++export const STATIC_SOLO_SOURCE_URL = process.env.STATIC_SOLO_SOURCE_URL;
+diff --git a/src/client/Utils.ts b/src/client/Utils.ts
+index 78a283f..f5f6c5b 100644
+--- a/src/client/Utils.ts
++++ b/src/client/Utils.ts
+@@ -1,4 +1,5 @@
+ import IntlMessageFormat from "intl-messageformat";
++import { getCdnBase } from "../core/AssetUrls";
+ import { DoomsdayClockSpeed } from "../core/game/DoomsdayClock";
+ import {
+   Duos,
+@@ -17,6 +18,7 @@ import { ClientEnv } from "./ClientEnv";
+ import type { LangSelector } from "./LangSelector";
+ import { pagePin } from "./PagePin";
+ import { Platform } from "./Platform";
++import { STATIC_SOLO } from "./StaticSolo";
+ 
+ export const TUTORIAL_VIDEO_URL = "https://www.youtube.com/embed/7J5zwb_s_Cg";
+ 
+@@ -975,6 +977,8 @@ export function currentPagePath(path: string): string {
+  * lands on `latest` rather than back on the build they were leaving.
+  */
+ export function homeHref(): string {
++  // The static build lives under a path prefix (e.g. /openfront/).
++  if (STATIC_SOLO) return `${getCdnBase().replace(/\/+$/, "")}/`;
+   const siteHost = ClientEnv.siteHost();
+   if (siteHost !== undefined && window.location.host !== siteHost) {
+     return `https://${siteHost}/`;
+diff --git a/src/client/components/Footer.ts b/src/client/components/Footer.ts
+index ef7ff93..f253272 100644
+--- a/src/client/components/Footer.ts
++++ b/src/client/components/Footer.ts
+@@ -3,6 +3,7 @@ import { customElement, state } from "lit/decorators.js";
+ import { assetUrl } from "../../core/AssetUrls";
+ import { composeVersionDisplay, desktopVersion } from "../DesktopShell";
+ import { currentGameVersion } from "../GameVersion";
++import { STATIC_SOLO, STATIC_SOLO_SOURCE_URL } from "../StaticSolo";
+ import "./SteamWishlistButton";
+ 
+ @customElement("page-footer")
+@@ -109,23 +110,37 @@ export class Footer extends LitElement {
+           <div class="footer-version text-xs mt-1 lg:mt-2 text-center px-4">
+             ${this.versionLabel}
+           </div>
+-          <div
+-            class="text-xs mt-1 lg:mt-2 flex items-center justify-center gap-4 px-4"
+-          >
+-            <a
+-              href="/terms-of-service.html"
+-              data-i18n="main.terms_of_service"
+-              target="_blank"
+-              class="hover:text-white transition-colors"
+-            ></a>
+-            <span data-i18n="main.copyright"></span>
+-            <a
+-              href="/privacy-policy.html"
+-              data-i18n="main.privacy_policy"
+-              target="_blank"
+-              class="hover:text-white transition-colors"
+-            ></a>
+-          </div>
++          ${STATIC_SOLO
++            ? html`<div
++                class="text-xs mt-1 lg:mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 px-4"
++              >
++                <span data-i18n="main.copyright"></span>
++                <span data-i18n="main.static_solo_unofficial"></span>
++                <a
++                  href=${STATIC_SOLO_SOURCE_URL}
++                  target="_blank"
++                  rel="noopener"
++                  data-i18n="main.static_solo_source"
++                  class="hover:text-white transition-colors underline"
++                ></a>
++              </div>`
++            : html`<div
++                class="text-xs mt-1 lg:mt-2 flex items-center justify-center gap-4 px-4"
++              >
++                <a
++                  href="/terms-of-service.html"
++                  data-i18n="main.terms_of_service"
++                  target="_blank"
++                  class="hover:text-white transition-colors"
++                ></a>
++                <span data-i18n="main.copyright"></span>
++                <a
++                  href="/privacy-policy.html"
++                  data-i18n="main.privacy_policy"
++                  target="_blank"
++                  class="hover:text-white transition-colors"
++                ></a>
++              </div>`}
+         </div>
+ 
+         <!-- Phones keep the full store widget on the play page instead; there
+diff --git a/src/core/AssetUrls.ts b/src/core/AssetUrls.ts
+index 4874309..9cdd5e8 100644
+--- a/src/core/AssetUrls.ts
++++ b/src/core/AssetUrls.ts
+@@ -67,6 +67,12 @@ export function buildAssetUrl(
+ 
+   const normalizedPath = normalizeAssetPath(path);
+ 
++  // Static builds can load the (large) map data from a separate CDN.
++  const mapsBase = typeof __MAPS_BASE__ === "string" ? __MAPS_BASE__ : "";
++  if (mapsBase && normalizedPath.startsWith("maps/")) {
++    return `${mapsBase.replace(/\/+$/, "")}/${encodeAssetPath(normalizedPath)}`;
++  }
++
+   const directUrl = assetManifest[normalizedPath];
+   if (directUrl) {
+     return baseUrl ? `${baseUrl.replace(/\/+$/, "")}${directUrl}` : directUrl;
+@@ -75,6 +81,8 @@ export function buildAssetUrl(
+   return `/${encodeAssetPath(normalizedPath)}`;
+ }
+ 
++declare const __MAPS_BASE__: string | undefined;
++
+ declare global {
+   var __ASSET_MANIFEST__: AssetManifest | undefined;
+   var __CDN_BASE__: string | undefined;
+diff --git a/static-solo/README.md b/static-solo/README.md
+new file mode 100644
+index 0000000..0955574
+--- /dev/null
++++ b/static-solo/README.md
+@@ -0,0 +1,30 @@
++# Static single-player build
++
++A build of OpenFront that runs entirely in the browser: solo games against AI
++nations and bots, with no game server and no account API. It can be hosted on
++any static file host (Vercel, GitHub Pages, Netlify, ...).
++
++```bash
++npm run inst
++BASE_PATH=/openfront ./static-solo/build.sh   # output in static/
++```
++
++- `BASE_PATH` is the URL prefix the site is served under.
++- `MAPS_BASE` is where map data is loaded from. It defaults to jsDelivr,
++  pinned to the upstream commit this build is based on, so the ~570 MB of
++  maps do not have to be hosted alongside the site.
++- `STATIC_SOLO_SOURCE_URL` is the "Source code" link in the footer.
++
++What `STATIC_SOLO=true` changes:
++
++- The home screen only offers Solo and Tutorial; lobbies, ranked, store,
++  clans, leaderboard and sign-in are hidden.
++- The lobby socket never connects, and account API requests are answered
++  locally by a small `fetch` shim in `index.html` so the client falls back to
++  its offline defaults.
++- Ads, ad-recovery and analytics scripts are removed.
++- The page URL stays on `BASE_PATH` during a game.
++- The all-rights-reserved assets in `proprietary/` are not used: the logo and
++  favicon are replaced with originals in `static-solo/overrides/`, the font
++  and alert sound with openly licensed files from `resources/`, and there is
++  no music.
+diff --git a/static-solo/build.sh b/static-solo/build.sh
+new file mode 100755
+index 0000000..8ad9a06
+--- /dev/null
++++ b/static-solo/build.sh
+@@ -0,0 +1,29 @@
++#!/usr/bin/env bash
++# Build the static single-player site into static/.
++#
++#   BASE_PATH  URL prefix the site is served under (default: /openfront)
++#   MAPS_BASE  where map data is loaded from (default: jsDelivr, pinned to
++#              the upstream commit this fork is based on)
++set -euo pipefail
++cd "$(dirname "$0")/.."
++
++UPSTREAM_COMMIT="22722dfe9aa9a7d7c6fe1b3fb4ace58ed8282731"
++export STATIC_SOLO=true
++export GIT_COMMIT="$UPSTREAM_COMMIT"
++export CDN_BASE="${BASE_PATH:-/openfront}"
++export MAPS_BASE="${MAPS_BASE:-https://cdn.jsdelivr.net/gh/openfrontio/openfrontio@${UPSTREAM_COMMIT}/resources}"
++
++# Stand-ins for the all-rights-reserved proprietary/ font and alert sound,
++# copied from the openly licensed resources/.
++OVERRIDES=static-solo/overrides
++mkdir -p "$OVERRIDES/fonts" "$OVERRIDES/sounds/effects"
++cp resources/fonts/overpass-bold.woff "$OVERRIDES/fonts/OpenFront.ttf"
++cp resources/sounds/effects/game-start.mp3 \
++  "$OVERRIDES/sounds/effects/game-start-alert.mp3"
++
++npx vite build
++node static-solo/renderIndex.mjs static "$CDN_BASE"
++
++# Drop pages that belong to openfront.io itself.
++rm -rf static/press static/ads.txt static/privacy-policy.html \
++  static/terms-of-service.html static/robots.txt
+diff --git a/static-solo/overrides/images/Favicon.svg b/static-solo/overrides/images/Favicon.svg
+new file mode 100644
+index 0000000..d9d894a
+--- /dev/null
++++ b/static-solo/overrides/images/Favicon.svg
+@@ -0,0 +1,4 @@
++<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
++  <path d="M6 4 L58 4 L58 46 L32 60 L6 46 Z" fill="#2e9be6"/>
++  <path d="M20 14 L46 14 L46 22 L29 22 L29 29 L42 29 L42 37 L29 37 L29 50 L20 50 Z" fill="#0b1726"/>
++</svg>
+diff --git a/static-solo/overrides/images/OpenFrontLogo.svg b/static-solo/overrides/images/OpenFrontLogo.svg
+new file mode 100644
+index 0000000..e180f8f
+--- /dev/null
++++ b/static-solo/overrides/images/OpenFrontLogo.svg
+@@ -0,0 +1,8 @@
++<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1364 259">
++  <g fill="#2e9be6">
++    <path d="M20 40 L200 40 L200 219 L110 250 L20 219 Z" fill="#2e9be6"/>
++    <path d="M60 80 L160 80 L160 110 L95 110 L95 135 L145 135 L145 165 L95 165 L95 205 L60 205 Z" fill="#0b1726"/>
++  </g>
++  <text x="240" y="150" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="118" letter-spacing="6" fill="#ffffff">FRONTIER</text>
++  <text x="242" y="236" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="72" letter-spacing="28" fill="#2e9be6">CONQUEST</text>
++</svg>
+diff --git a/static-solo/overrides/images/OpenFrontLogoDark.svg b/static-solo/overrides/images/OpenFrontLogoDark.svg
+new file mode 100644
+index 0000000..e180f8f
+--- /dev/null
++++ b/static-solo/overrides/images/OpenFrontLogoDark.svg
+@@ -0,0 +1,8 @@
++<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1364 259">
++  <g fill="#2e9be6">
++    <path d="M20 40 L200 40 L200 219 L110 250 L20 219 Z" fill="#2e9be6"/>
++    <path d="M60 80 L160 80 L160 110 L95 110 L95 135 L145 135 L145 165 L95 165 L95 205 L60 205 Z" fill="#0b1726"/>
++  </g>
++  <text x="240" y="150" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="118" letter-spacing="6" fill="#ffffff">FRONTIER</text>
++  <text x="242" y="236" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="72" letter-spacing="28" fill="#2e9be6">CONQUEST</text>
++</svg>
+diff --git a/static-solo/renderIndex.mjs b/static-solo/renderIndex.mjs
+new file mode 100644
+index 0000000..02575e7
+--- /dev/null
++++ b/static-solo/renderIndex.mjs
+@@ -0,0 +1,36 @@
++// Render the EJS index.html that vite emits into a plain static page, filling
++// in the values a game server would normally inject at request time.
++//
++//   node static-solo/renderIndex.mjs <staticDir> <basePath>
++import ejs from "ejs";
++import fs from "fs";
++import path from "path";
++
++const [, , staticDir, base] = process.argv;
++const manifest = JSON.parse(
++  fs.readFileSync(path.join(staticDir, "asset-manifest.json"), "utf8"),
++);
++const url = (p) => (manifest[p] ? base + manifest[p] : `${base}/${p}`);
++const TRANSPARENT_PIXEL =
++  "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
++const indexPath = path.join(staticDir, "index.html");
++
++const html = ejs.render(fs.readFileSync(indexPath, "utf8"), {
++  gitCommit: JSON.stringify(process.env.GIT_COMMIT ?? "static-solo"),
++  assetManifest: JSON.stringify(manifest),
++  cdnBase: JSON.stringify(base),
++  cdnBaseRaw: base,
++  gameEnv: JSON.stringify("prod"),
++  turnstileSiteKey: JSON.stringify("1x00000000000000000000AA"),
++  // Points the account API at an origin the page's fetch shim answers
++  // locally, so every API call fails fast into the offline fallbacks.
++  jwtAudience: JSON.stringify("offline.invalid"),
++  manifestHref: url("manifest.json"),
++  faviconHref: url("images/Favicon.svg"),
++  gameplayScreenshotUrl: url("images/GameplayScreenshot.png"),
++  backgroundImageUrl: url("images/background.webp"),
++  // No big watermark logo behind the menu.
++  desktopLogoImageUrl: TRANSPARENT_PIXEL,
++  mobileLogoImageUrl: TRANSPARENT_PIXEL,
++});
++fs.writeFileSync(indexPath, html);
+diff --git a/vite.config.ts b/vite.config.ts
+index a086e5c..c7242ed 100644
+--- a/vite.config.ts
++++ b/vite.config.ts
+@@ -206,11 +206,22 @@ export default defineConfig(({ mode }) => {
+     [devInstanceLetter]: { host: "localhost", numWorkers: devNumWorkers },
+   });
+   const resourcesDir = getResourcesDir(__dirname);
+-  const proprietaryDir = getProprietaryDir(__dirname);
++  // The static solo build ships original stand-ins instead of the
++  // all-rights-reserved assets in proprietary/.
++  const proprietaryDir =
++    env.STATIC_SOLO === "true"
++      ? path.join(__dirname, "static-solo", "overrides")
++      : getProprietaryDir(__dirname);
+   const sourceDirs = [resourcesDir, proprietaryDir];
+   const assetManifest: AssetManifest = isProduction
+     ? buildPublicAssetManifest(sourceDirs)
+     : {};
++  // Maps served from MAPS_BASE are neither hashed nor copied into the build.
++  if (env.MAPS_BASE) {
++    for (const key of Object.keys(assetManifest)) {
++      if (key.startsWith("maps/")) delete assetManifest[key];
++    }
++  }
+   const cdnBase = env.CDN_BASE ?? "";
+   const htmlAssetData = {
+     assetManifest: JSON.stringify(assetManifest),
+@@ -391,6 +402,12 @@ export default defineConfig(({ mode }) => {
+         isProduction ? "" : "localhost:3000",
+       ),
+       "process.env.GAME_ENV": JSON.stringify(isProduction ? "prod" : "dev"),
++      "process.env.STATIC_SOLO": JSON.stringify(env.STATIC_SOLO ?? ""),
++      "process.env.STATIC_SOLO_SOURCE_URL": JSON.stringify(
++        env.STATIC_SOLO_SOURCE_URL ??
++          "https://github.com/openfrontio/OpenFrontIO",
++      ),
++      __MAPS_BASE__: JSON.stringify(env.MAPS_BASE ?? ""),
+       // Force empty under vitest (mode "test") so the getApiBase localhost-
+       // fallback test is deterministic regardless of any API_DOMAIN in the
+       // host shell / CI environment.
